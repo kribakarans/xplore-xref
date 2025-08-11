@@ -1,0 +1,12 @@
+*.out
+*.swo
+*.swp
+*core*
+__ktags
+obj
+dist
+sandbox
+lib/libs
+codereview
+make/configs.mk
+build/ktest-build

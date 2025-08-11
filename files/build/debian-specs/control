@@ -1,0 +1,22 @@
+Source: ktest
+Section: devel
+Priority: optional
+Maintainer: Kirubakaran Shanmugam <kribakarans@gmail.com>
+Build-Depends: debhelper (>=11~)
+Standards-Version: 4.1.4
+Homepage: https://github.com/kribakarans/ktest
+
+Package: libktest
+Section: libs
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: Ktest shared library
+
+Package: libktest-dev
+Section: libdevel
+Architecture: any
+Multi-Arch: same
+Depends: libktest (= ${binary:Version}), ${misc:Depends}
+Description: Ktest shared library development files
