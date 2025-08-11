@@ -125,3 +125,54 @@ body {
 #current-file {
   font-size: 14px;
 }
+#file-search {
+  width: 90%;
+  margin: 6px auto;
+  padding: 4px 8px;
+  background-color: #1e1e1e;
+  border: 1px solid #555;
+  border-radius: 3px;
+  color: #ccc;
+  font-size: 12px;
+  display: block;
+}
+
+#file-search:focus {
+  outline: none;
+  border-color: #4FC3F7;
+}
+
+#sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background: #2d2d2d;
+  border-bottom: 1px solid #333;
+}
+
+#search-toggle {
+  font-size: 14px;
+  color: #bbb;
+  cursor: pointer;
+}
+
+#search-toggle:hover {
+  color: #fff;
+}
+
+#file-search {
+  width: calc(100% - 20px);
+  margin: 6px 10px;
+  padding: 4px 8px;
+  background-color: #1e1e1e;
+  border: 1px solid #555;
+  border-radius: 3px;
+  color: #ccc;
+  font-size: 12px;
+}
+
+#file-search:focus {
+  outline: none;
+  border-color: #4FC3F7;
+}
