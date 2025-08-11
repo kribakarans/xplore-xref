@@ -178,13 +178,19 @@ function getLanguageFromExt(ext) {
     java: "java",
     c: "c",
     cpp: "cpp",
+    h: "cpp",          // Header files
     cs: "csharp",
     php: "php",
     rb: "ruby",
     go: "go",
     rs: "rust",
     ts: "typescript",
-    sh: "shell"
+    sh: "shell",
+    mk: "makefile",    // .mk files
+    makefile: "makefile", // Makefile
+    rc: "shell",       // .rc treated as bash
+    vim: "vim",        // .vim scripts
+    lua: "lua"         // Lua scripts
   };
   return map[ext] || "plaintext";
 }
