@@ -1,0 +1,118 @@
+/* Basic layout */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Segoe WPC, Segoe UI, sans-serif;
+  background-color: #1e1e1e;
+}
+
+#app {
+  display: flex;
+  height: 100vh;
+}
+
+#sidebar {
+  width: 280px;
+  background-color: #252526;
+  color: #ccc;
+  overflow-y: auto;
+  border-right: 1px solid #333;
+}
+
+#sidebar h3 {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #bbb;
+  background-color: #2d2d2d;
+  border-bottom: 1px solid #333;
+}
+
+.tree {
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+  font-size: 13px;
+}
+
+.tree li {
+  position: relative;
+  padding: 2px 8px 2px 24px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tree li:hover {
+  background-color: #2a2d2e;
+}
+
+.tree li.selected {
+  background-color: #094771;
+  color: white;
+}
+
+.tree .folder::before {
+  font-family: "codicon";
+  content: "\eab4"; /* codicon-folder */
+  position: absolute;
+  left: 5px;
+  color: #c5c5c5;
+}
+
+.tree .folder.expanded::before {
+  content: "\eab6"; /* codicon-folder-opened */
+}
+
+.tree .file::before {
+  font-family: "codicon";
+  content: "\ea7b"; /* codicon-file */
+  position: absolute;
+  left: 5px;
+  color: #c5c5c5;
+}
+
+/* Expand/Collapse arrow */
+.tree .arrow {
+  font-family: "codicon";
+  content: "\eab8";
+  position: absolute;
+  left: 10px;
+  font-size: 10px;
+  color: #c5c5c5;
+  transform: rotate(-90deg);
+}
+
+.tree .expanded > .arrow {
+  transform: rotate(0deg);
+}
+
+/* Tree connecting lines */
+.tree ul {
+  list-style: none;
+  margin: 0;
+  padding-left: 16px;
+  border-left: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Main area */
+#main {
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  background:#1e1e1e;
+  color:#ddd;
+}
+#editor-toolbar {
+  height:32px;
+  display:flex;
+  align-items:center;
+  padding:4px 12px;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+  background: #1f1f1f;
+  color:#ddd;
+}
+#current-file {
+  font-size:14px;
+}
