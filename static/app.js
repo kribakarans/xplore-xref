@@ -22,14 +22,21 @@ async function loadTree(path) {
 
     data.forEach(item => {
       const li = document.createElement("li");
-      li.textContent = item.name;
       li.classList.add(item.type);
 
+      // Arrow span (folders only)
       if (item.type === "dir") {
         li.classList.add("folder");
+
         const arrow = document.createElement("span");
         arrow.classList.add("arrow");
-        li.prepend(arrow);
+
+        const nameSpan = document.createElement("span");
+        nameSpan.classList.add("name");
+        nameSpan.textContent = item.name;
+
+        li.appendChild(arrow);
+        li.appendChild(nameSpan);
 
         const subUl = document.createElement("ul");
         subUl.setAttribute("data-path", item.path);
@@ -48,8 +55,18 @@ async function loadTree(path) {
             }
           }
         });
+
         li.appendChild(subUl);
+
       } else if (item.type === "file") {
+        li.classList.add("file");
+
+        const nameSpan = document.createElement("span");
+        nameSpan.classList.add("name");
+        nameSpan.textContent = item.name;
+
+        li.appendChild(nameSpan);
+
         li.addEventListener("click", (e) => {
           e.stopPropagation();
           selectItem(li);

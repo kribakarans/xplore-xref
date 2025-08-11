@@ -53,18 +53,27 @@ body {
   color: white;
 }
 
+/* Folder icons */
 .tree .folder::before {
   font-family: "codicon";
   content: "\eab4"; /* codicon-folder */
   position: absolute;
   left: 5px;
-  color: #c5c5c5;
+  color: #4FC3F7; /* blue */
 }
 
 .tree .folder.expanded::before {
   content: "\eab6"; /* codicon-folder-opened */
+  color: #4FC3F7;
 }
 
+/* Folder name style */
+.tree li.folder > .name {
+  font-weight: 600;
+  color: #4FC3F7;
+}
+
+/* File icons */
 .tree .file::before {
   font-family: "codicon";
   content: "\ea7b"; /* codicon-file */
@@ -98,21 +107,21 @@ body {
 
 /* Main area */
 #main {
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  background:#1e1e1e;
-  color:#ddd;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #1e1e1e;
+  color: #ddd;
 }
 #editor-toolbar {
-  height:32px;
-  display:flex;
-  align-items:center;
-  padding:4px 12px;
-  border-bottom:1px solid rgba(255,255,255,0.04);
+  height: 32px;
+  display: flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
   background: #1f1f1f;
-  color:#ddd;
+  color: #ddd;
 }
 #current-file {
-  font-size:14px;
+  font-size: 14px;
 }
