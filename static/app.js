@@ -1,5 +1,6 @@
 let openTabs = [];
 let activePath = null;
+let openFilesCache = {};
 
 function openTab(file) {
   console.log("[Tab] Opening file:", file.path);
@@ -107,6 +108,32 @@ require(["vs/editor/editor.main"], async function () {
     const filtered = searchTree(query, fullTree);
     console.log("[Search] Filtered results:", filtered);
     renderTree(filtered, document.getElementById("file-tree"), true);
+  });
+
+  document.getElementById("editor-minimap").addEventListener("click", () => {
+    console.log("[Editor] Toggling minimap");
+    const current = editor.getOption(monaco.editor.EditorOption.minimap).enabled;
+    editor.updateOptions({
+      minimap: { enabled: !current }
+    });
+  });
+
+  document.getElementById("editor-wrap").addEventListener("click", () => {
+    console.log("[Editor] Toggling word wrap");
+    const current = editor.getOption(monaco.editor.EditorOption.wordWrap);
+    editor.updateOptions({
+      wordWrap: current === "on" ? "off" : "on"
+    });
+  });
+
+  document.getElementById("editor-symbols").addEventListener("click", () => {
+    console.log("[Editor] Quick outline (go to symbol in file)");
+    editor.getAction("editor.action.quickOutline").run();
+  });
+
+  document.getElementById("editor-search").addEventListener("click", () => {
+    console.log("[Editor] Search in file");
+    editor.getAction("actions.find").run();
   });
 });
 
@@ -242,7 +269,7 @@ function getLanguageFromExt(ext) {
     java: "java",
     c: "c",
     cpp: "cpp",
-    h: "cpp",          // Header files
+    h: "c",
     cs: "csharp",
     php: "php",
     rb: "ruby",
@@ -250,11 +277,10 @@ function getLanguageFromExt(ext) {
     rs: "rust",
     ts: "typescript",
     sh: "shell",
-    mk: "makefile",    // .mk files
-    makefile: "makefile", // Makefile
-    rc: "shell",       // .rc treated as bash
-    vim: "vim",        // .vim scripts
-    lua: "lua"         // Lua scripts
+    mk: "makefile",
+    rc: "shell",
+    vim: "vim",
+    lua: "lua"
   };
   return map[ext] || "plaintext";
 }

@@ -163,10 +163,35 @@ body {
   height: 32px;
   display: flex;
   align-items: center;
-  padding: 4px 12px;
+  justify-content: space-between; /* Tabs left, tools right */
+  padding: 0 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   background: #1f1f1f;
   color: #ddd;
+}
+
+#tabs {
+  display: flex;
+  height: 30px;
+  align-items: center;
+  background: #1f1f1f;
+  overflow-x: auto;
+}
+
+#editor-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#editor-tools span {
+  font-size: 16px;
+  color: #bbb;
+  cursor: pointer;
+}
+
+#editor-tools span:hover {
+  color: #fff;
 }
 
 #current-file {
