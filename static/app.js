@@ -1,3 +1,61 @@
+
+let openTabs = [];
+let activePath = null;
+
+function openTab(file) {
+  const existing = openTabs.find(t => t.path === file.path);
+  if (existing) {
+    setActiveTab(existing.path);
+    return;
+  }
+  const tabEl = document.createElement("div");
+  tabEl.className = "tab";
+  tabEl.textContent = file.name;
+
+  const closeBtn = document.createElement("span");
+  closeBtn.className = "close";
+  closeBtn.textContent = "×";
+  closeBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    closeTab(file.path);
+  });
+
+  tabEl.appendChild(closeBtn);
+  tabEl.addEventListener("click", () => setActiveTab(file.path));
+  document.getElementById("tabs").appendChild(tabEl);
+
+  openTabs.push({ path: file.path, name: file.name, content: file.content, tabEl });
+  setActiveTab(file.path);
+}
+
+function setActiveTab(path) {
+  activePath = path;
+  openTabs.forEach(tab => {
+    tab.tabEl.classList.toggle("active", tab.path === path);
+  });
+  const activeFile = openTabs.find(t => t.path === path);
+  if (activeFile) {
+    const ext = activeFile.name.split(".").pop().toLowerCase();
+    const lang = getLanguageFromExt(ext);
+    monaco.editor.setModelLanguage(editor.getModel(), lang);
+    editor.setValue(activeFile.content);
+  }
+}
+
+function closeTab(path) {
+  const index = openTabs.findIndex(t => t.path === path);
+  if (index !== -1) {
+    openTabs[index].tabEl.remove();
+    openTabs.splice(index, 1);
+    if (activePath === path && openTabs.length > 0) {
+      setActiveTab(openTabs[openTabs.length - 1].path);
+    } else if (openTabs.length === 0) {
+      editor.setValue("");
+      activePath = null;
+    }
+  }
+}
+
 let editor;
 let selectedItem = null;
 let fullTree = null; // Store the full tree structure for searching
@@ -146,13 +204,10 @@ async function loadFile(path) {
     const res = await fetch(`/api/file?path=${encodeURIComponent(path)}`);
     const data = await res.json();
     if (data.error) {
-      editor.setValue(`Error: ${data.error}`);
+      alert(`Error: ${data.error}`);
       return;
     }
-    const ext = data.name.split(".").pop().toLowerCase();
-    const lang = getLanguageFromExt(ext);
-    monaco.editor.setModelLanguage(editor.getModel(), lang);
-    editor.setValue(data.content);
+    openTab(data);
   } catch (err) {
     console.error("Error loading file:", err);
   }
