@@ -1,10 +1,11 @@
-
 let openTabs = [];
 let activePath = null;
 
 function openTab(file) {
+  console.log("[Tab] Opening file:", file.path);
   const existing = openTabs.find(t => t.path === file.path);
   if (existing) {
+    console.log("[Tab] Already open, activating:", file.path);
     setActiveTab(existing.path);
     return;
   }
@@ -17,6 +18,7 @@ function openTab(file) {
   closeBtn.textContent = "×";
   closeBtn.addEventListener("click", (e) => {
     e.stopPropagation();
+    console.log("[Tab] Closing:", file.path);
     closeTab(file.path);
   });
 
@@ -29,6 +31,7 @@ function openTab(file) {
 }
 
 function setActiveTab(path) {
+  console.log("[Tab] Setting active:", path);
   activePath = path;
   openTabs.forEach(tab => {
     tab.tabEl.classList.toggle("active", tab.path === path);
@@ -37,12 +40,14 @@ function setActiveTab(path) {
   if (activeFile) {
     const ext = activeFile.name.split(".").pop().toLowerCase();
     const lang = getLanguageFromExt(ext);
+    console.log("[Editor] Setting language:", lang);
     monaco.editor.setModelLanguage(editor.getModel(), lang);
     editor.setValue(activeFile.content);
   }
 }
 
 function closeTab(path) {
+  console.log("[Tab] Closing tab:", path);
   const index = openTabs.findIndex(t => t.path === path);
   if (index !== -1) {
     openTabs[index].tabEl.remove();
@@ -58,10 +63,11 @@ function closeTab(path) {
 
 let editor;
 let selectedItem = null;
-let fullTree = null; // Store the full tree structure for searching
+let fullTree = null;
 
 require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
 require(["vs/editor/editor.main"], async function () {
+  console.log("[Init] Monaco Editor starting...");
   editor = monaco.editor.create(document.getElementById("editor"), {
     value: "",
     language: "plaintext",
@@ -70,15 +76,16 @@ require(["vs/editor/editor.main"], async function () {
     readOnly: true
   });
 
-  // Load the full tree recursively on startup
+  console.log("[Tree] Loading full directory tree...");
   fullTree = await loadFullTree("");
+  console.log("[Tree] Full structure:", fullTree);
   renderTree(fullTree, document.getElementById("file-tree"));
 
-  // Search toggle
   const searchToggle = document.getElementById("search-toggle");
   const searchInput = document.getElementById("file-search");
 
   searchToggle.addEventListener("click", () => {
+    console.log("[Search] Toggle clicked");
     if (searchInput.style.display === "none") {
       searchInput.style.display = "block";
       searchInput.focus();
@@ -92,20 +99,23 @@ require(["vs/editor/editor.main"], async function () {
   // Search input listener
   searchInput.addEventListener("input", function () {
     const query = this.value.trim().toLowerCase();
+    console.log("[Search] Query:", query);
     if (!query) {
       renderTree(fullTree, document.getElementById("file-tree"), false);
       return;
     }
     const filtered = searchTree(query, fullTree);
+    console.log("[Search] Filtered results:", filtered);
     renderTree(filtered, document.getElementById("file-tree"), true);
   });
 });
 
 // Recursively fetch the entire tree
 async function loadFullTree(path) {
+  console.log("[API] GET /api/tree", { path });
   const res = await fetch(`/api/tree?path=${encodeURIComponent(path)}`);
   const items = await res.json();
-
+  console.log("[API] Tree response:", items);
   for (const item of items) {
     if (item.type === "dir") {
       item.children = await loadFullTree(item.path);
@@ -116,6 +126,7 @@ async function loadFullTree(path) {
 
 // Render tree from data
 function renderTree(data, container, autoExpandParents = false) {
+  console.log("[Tree] Rendering...", { autoExpandParents, nodes: data.length });
   container.innerHTML = "";
   data.forEach(item => {
     const li = document.createElement("li");
@@ -123,14 +134,11 @@ function renderTree(data, container, autoExpandParents = false) {
 
     if (item.type === "dir") {
       li.classList.add("folder");
-
       const arrow = document.createElement("span");
       arrow.classList.add("arrow");
-
       const nameSpan = document.createElement("span");
       nameSpan.classList.add("name");
       nameSpan.textContent = item.name;
-
       li.appendChild(arrow);
       li.appendChild(nameSpan);
 
@@ -145,6 +153,7 @@ function renderTree(data, container, autoExpandParents = false) {
 
       li.addEventListener("click", (e) => {
         e.stopPropagation();
+        console.log("[Tree] Folder click:", item.path);
         if (li.classList.contains("expanded")) {
           li.classList.remove("expanded");
           subUl.style.display = "none";
@@ -158,21 +167,19 @@ function renderTree(data, container, autoExpandParents = false) {
         renderTree(item.children, subUl, autoExpandParents);
       }
       li.appendChild(subUl);
-
     } else {
       // FILE
       const nameSpan = document.createElement("span");
       nameSpan.classList.add("name");
       nameSpan.textContent = item.name;
       li.appendChild(nameSpan);
-
       li.addEventListener("click", (e) => {
         e.stopPropagation();
+        console.log("[Tree] File click:", item.path);
         selectItem(li);
         loadFile(item.path);
       });
     }
-
     container.appendChild(li);
   });
 }
@@ -200,16 +207,18 @@ function searchTree(query, nodes) {
 
 // Load file content into Monaco
 async function loadFile(path) {
+  console.log("[API] GET /api/file", { path });
   try {
     const res = await fetch(`/api/file?path=${encodeURIComponent(path)}`);
     const data = await res.json();
+    console.log("[API] File response:", data);
     if (data.error) {
       alert(`Error: ${data.error}`);
       return;
     }
     openTab(data);
   } catch (err) {
-    console.error("Error loading file:", err);
+    console.error("[Error] Loading file:", err);
   }
 }
 

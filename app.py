@@ -2,11 +2,43 @@
 from flask import Flask, jsonify, request
 from pathlib import Path
 import traceback
+import json
+import time
 
 app = Flask(__name__, static_folder="static", static_url_path="")
 
 # Serve files from ./files folder
 ROOT_DIR = (Path(__file__).parent / "files").resolve()
+
+# ===== Logging Hooks =====
+@app.before_request
+def log_request_info():
+    print("\n=== Incoming Request ===")
+    print(f"Time     : {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Method   : {request.method}")
+    print(f"Path     : {request.path}")
+    if request.args:
+        print(f"Query    : {request.args.to_dict()}")
+    if request.is_json:
+        try:
+            print(f"JSON Body: {json.dumps(request.get_json(), indent=2)}")
+        except Exception:
+            print("JSON Body: [Invalid or None]")
+
+@app.after_request
+def log_response_info(response):
+    print(f"--- Response ---")
+    print(f"Status: {response.status}")
+    try:
+        # Attempt to pretty-print JSON responses
+        if response.content_type == "application/json":
+            print(f"Body:\n{json.dumps(json.loads(response.get_data(as_text=True)), indent=2)}")
+        else:
+            print(f"Body: {response.get_data(as_text=True)[:300]}...")  # truncate long HTML
+    except Exception as e:
+        print(f"Could not log response body: {e}")
+    print("=" * 30)
+    return response
 
 @app.route("/")
 def index():
