@@ -1,4 +1,4 @@
-/* Basic layout */
+/* Global Layout */
 * {
   box-sizing: border-box;
 }
@@ -14,12 +14,22 @@ body {
   height: 100vh;
 }
 
+/* Side Panel */
 #sidebar {
   width: 280px;
   background-color: #252526;
   color: #ccc;
   overflow-y: auto;
   border-right: 1px solid #333;
+}
+
+#sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 10px 0px 0px; /* Top Right Bottom Left */
+  background: #2d2d2d;
+  border-bottom: 1px solid #333;
 }
 
 #sidebar h3 {
@@ -29,143 +39,6 @@ body {
   font-weight: bold;
   color: #bbb;
   background-color: #2d2d2d;
-}
-
-.tree {
-  list-style: none;
-  margin: 0;
-  padding-left: 0;
-  font-size: 16px;
-}
-
-.tree li {
-  position: relative;
-  padding: 3px 8px 3px 20px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.tree li:hover {
-  background-color: #2a2d2e;
-}
-
-.tree li.selected {
-  background-color: #094771;
-  color: white;
-}
-
-/* Folder icons */
-.tree .folder::before {
-  font-family: "codicon";
-  content: "\eab6";
-  /* codicon-folder */
-  position: absolute;
-  left: 5px;
-  font-size: 16px;
-  color: #4FC3F7;
-  /* blue */
-}
-
-.tree .folder.expanded::before {
-  content: "\eab4";
-  /* codicon-folder-opened */
-  color: #4FC3F7;
-  font-size: 16px;
-}
-
-/* Folder name style */
-.tree li.folder>.name {
-  padding: 10px;
-  font-weight: 600;
-  color: #4FC3F7;
-}
-
-/* File icons */
-.tree .file::before {
-  font-family: "codicon";
-  content: "\ea7b";
-  /* codicon-file */
-  position: absolute;
-  left: 5px;
-  color: #c5c5c5;
-}
-
-.tree li.file>.name {
-  padding: 10px;
-}
-
-.tree .arrow {
-  font-family: "codicon";
-  content: "\eab8";
-  position: absolute;
-  left: 10px;
-  font-size: 12px;
-  color: #c5c5c5;
-  transform: rotate(0deg);
-  /* right arrow for collapsed */
-}
-
-.tree .expanded>.arrow {
-  transform: rotate(90deg);
-  /* down arrow for expanded */
-}
-
-/* Tree connecting lines */
-.tree ul {
-  list-style: none;
-  margin: 0;
-  padding-left: 5px;
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Main area */
-#main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: #1e1e1e;
-  color: #ddd;
-}
-
-#editor-toolbar {
-  height: 32px;
-  display: flex;
-  align-items: center;
-  padding: 4px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  background: #1f1f1f;
-  color: #ddd;
-}
-
-#current-file {
-  font-size: 14px;
-}
-
-#file-search {
-  width: 90%;
-  margin: 6px auto;
-  padding: 4px 8px;
-  background-color: #1e1e1e;
-  border: 1px solid #555;
-  border-radius: 3px;
-  color: #ccc;
-  font-size: 12px;
-  display: block;
-}
-
-#file-search:focus {
-  outline: none;
-  border-color: #4FC3F7;
-}
-
-#sidebar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 3px;
-  padding-right: 10px;
-  background: #2d2d2d;
-  border-bottom: 1px solid #333;
 }
 
 #search-toggle {
@@ -194,7 +67,113 @@ body {
   border-color: #4FC3F7;
 }
 
-/* Tab bar styles */
+/* File Tree */
+.tree {
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+  font-size: 16px;
+}
+
+.tree li {
+  position: relative;
+  padding: 3px 8px 3px 20px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tree li:hover {
+  background-color: #2a2d2e;
+}
+
+.tree li.selected {
+  background-color: #094771;
+  color: white;
+}
+
+/* Folder Icons */
+.tree .folder::before {
+  font-family: "codicon";
+  content: "\eab6"; /* codicon-folder */
+  position: absolute;
+  left: 5px;
+  font-size: 16px;
+  color: #4FC3F7;
+}
+
+.tree .folder.expanded::before {
+  content: "\eab4"; /* codicon-folder-opened */
+  color: #4FC3F7;
+  font-size: 16px;
+}
+
+/* Folder Name */
+.tree li.folder > .name {
+  padding: 10px;
+  font-weight: 600;
+  color: #4FC3F7;
+}
+
+/* File Icons */
+.tree .file::before {
+  font-family: "codicon";
+  content: "\ea7b"; /* codicon-file */
+  position: absolute;
+  left: 5px;
+  color: #c5c5c5;
+}
+
+.tree li.file > .name {
+  padding: 10px;
+}
+
+/* Arrow Icons */
+.tree .arrow {
+  font-family: "codicon";
+  content: "\eab8";
+  position: absolute;
+  left: 10px;
+  font-size: 12px;
+  color: #c5c5c5;
+  transform: rotate(0deg); /* Right arrow for collapsed */
+}
+
+.tree .expanded > .arrow {
+  transform: rotate(90deg); /* down arrow for expanded */
+}
+
+/* Tree Lines */
+.tree ul {
+  list-style: none;
+  margin: 0;
+  padding-left: 5px;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Main Area */
+#main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #1e1e1e;
+  color: #ddd;
+}
+
+#editor-toolbar {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  background: #1f1f1f;
+  color: #ddd;
+}
+
+#current-file {
+  font-size: 14px;
+}
+
+/* Tab Bar Styles */
 #tabs {
   display: flex;
   height: 30px;
