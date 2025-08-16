@@ -140,7 +140,7 @@ require(["vs/editor/editor.main"], async function () {
 // Load static tree.json
 async function loadFullTree() {
   console.log("[API] Loading static tree.json");
-  const res = await fetch("data/tree.json");
+  const res = await fetch("__ktree/tree.json");
   const tree = await res.json();
   return tree;
 }
@@ -230,7 +230,7 @@ function searchTree(query, nodes) {
 async function loadFile(path) {
   console.log("[API] Loading raw file:", path);
   try {
-    const res = await fetch(`files/${path}`);
+    const res = await fetch(`${path}`);
     if (!res.ok) {
       alert(`Error loading file: ${path}`);
       return;

@@ -4,12 +4,24 @@ import json
 import sys
 from jinja2 import Environment, FileSystemLoader
 
-ROOT_DIR = "files"
-OUTPUT_DIR = "data"
-HTML_DIR = "html"
-OUTPUT_FILE = os.path.join(OUTPUT_DIR, "tree.json")
-TEMPLATE_FILE = os.path.join(HTML_DIR, "index.html.in")
+import shutil
+import stat
+import mimetypes
+from datetime import datetime
+from pathlib import Path
+
+ROOT_DIR = "."
+KTREE_DIR = "__ktree"
+OUTPUT_FILE = os.path.join(KTREE_DIR, "tree.json")
+INDEX_LINK = "index.html"
 INDEX_FILE = "index.html"
+SHARE_SRC = os.path.expanduser("~/.local/share/ktree-monaco")
+TEMPLATE_FILE = os.path.join(KTREE_DIR, "index.html.in")
+EXCLUDED_DIRS = {".git", "node_modules"}
+EXCLUDED_FILE_PATTERNS = (".out", ".so", ".so.1", ".swa", ".swp", ".rej", ".orig")
+
+def log(msg):
+    print(f"[INFO] {msg}")
 
 def sort_key(name, path):
     """Return tuple for sorting: (category, lowercase name)"""
@@ -75,6 +87,27 @@ def render_template(app_name="Xplore", repo_url="#"):
         print(f"[Error] Failed to render template: {str(e)}")
         sys.exit(1)
 
+def is_excluded_file(name):
+    return (
+        name.startswith(".") and name in {".", ".."} or
+        name.endswith("~") or
+        any(name.endswith(p) for p in EXCLUDED_FILE_PATTERNS)
+    )
+
+def is_excluded_dir(name):
+    return (
+        name in EXCLUDED_DIRS or
+        name.startswith("__") or
+        name in {".", ".."}
+    )
+
+def copy_template_files():
+    if not os.path.isdir(SHARE_SRC):
+        print(f"[ERROR] Missing template dir: {SHARE_SRC}")
+        exit(1)
+    shutil.copytree(SHARE_SRC, KTREE_DIR, dirs_exist_ok=True)
+    log(f"Copied template files to {KTREE_DIR}")
+
 def main():
     # Parse command line arguments
     app_name = "Xplore"  # default value
@@ -85,11 +118,12 @@ def main():
     if len(sys.argv) > 2:
         repo_url = sys.argv[2]
 
+    copy_template_files()
+
     # Build file tree structure
     print(f"[Build] Scanning '{ROOT_DIR}'...")
     tree = build_tree(ROOT_DIR)
 
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(tree, f, indent=2)
     print(f"[Build] Wrote file tree → {OUTPUT_FILE}")
