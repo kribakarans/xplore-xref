@@ -235,3 +235,19 @@ body {
 .tab .close:hover {
   color: #fff;
 }
+
+/* Add these new styles */
+#sidebar-header h3.clickable {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+#sidebar-header h3.clickable:hover {
+  color: #4FC3F7;
+  text-decoration: underline;
+}
+
+#editor {
+  width: 100%;
+  height: calc(100% - 32px);
+}

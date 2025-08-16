@@ -4,15 +4,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>VSCode Style File Viewer</title>
-
-  <!-- styles -->
+  <title>{{ PAGE_TITLE }}</title>
   <link rel="stylesheet" href="styles.css" />
-
-  <!-- Codicons for VSCode-like icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@vscode/codicons/dist/codicon.css">
-
-  <!-- Monaco Editor loader -->
   <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.min.js"></script>
 </head>
 
@@ -20,7 +14,9 @@
   <div id="app">
     <div id="sidebar">
       <div id="sidebar-header">
-        <h3>EXPLORER</h3>
+        <h3 onclick="window.open('{{ REPO_URL }}', '_blank')" class="{{ 'clickable' if REPO_URL != '#' else '' }}">
+          {{ APP_NAME }}
+        </h3>
         <span id="search-toggle" class="codicon codicon-search"></span>
       </div>
       <input type="text" id="file-search" placeholder="Search files..." style="display:none;" />
@@ -37,7 +33,7 @@
           <span id="editor-search" class="codicon codicon-search" title="Search in File"></span>
         </div>
       </div>
-      <div id="editor" style="width:100%;height:calc(100% - 32px);"></div>
+      <div id="editor"></div>
     </div>
   </div>
 
