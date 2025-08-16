@@ -2,26 +2,55 @@
 import os
 import json
 import sys
-from jinja2 import Environment, FileSystemLoader
-
 import shutil
-import stat
 import mimetypes
 from datetime import datetime
 from pathlib import Path
+from jinja2 import Environment, FileSystemLoader
 
 ROOT_DIR = "."
 KTREE_DIR = "__ktree"
 OUTPUT_FILE = os.path.join(KTREE_DIR, "tree.json")
-INDEX_LINK = "index.html"
 INDEX_FILE = "index.html"
 SHARE_SRC = os.path.expanduser("~/.local/share/ktree-monaco")
 TEMPLATE_FILE = os.path.join(KTREE_DIR, "index.html.in")
-EXCLUDED_DIRS = {".git", "node_modules"}
-EXCLUDED_FILE_PATTERNS = (".out", ".so", ".so.1", ".swa", ".swp", ".rej", ".orig")
 
-def log(msg):
-    print(f"[INFO] {msg}")
+# Exclusion patterns
+EXCLUDED_DIRS = {".git", "node_modules", "__pycache__", ".idea", ".vscode", "venv"}
+EXCLUDED_FILE_PATTERNS = (
+    "~", ".tmp", ".swp", ".bak", ".out", ".o", ".so",
+    ".pyc", ".pyo", ".pyd", ".class", ".jar", ".war"
+)
+EXCLUDED_FILE_NAMES = {".DS_Store", "desktop.ini"}
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+
+def log(msg, level="INFO"):
+    """Improved logging with timestamp"""
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"[{timestamp}] [{level}] {msg}")
+
+def should_exclude(path):
+    """Determine if a path should be excluded"""
+    name = os.path.basename(path)
+
+    if os.path.isdir(path):
+        return name in EXCLUDED_DIRS or name.startswith('__')
+
+    if (name in EXCLUDED_FILE_NAMES or
+        any(name.endswith(patt) for patt in EXCLUDED_FILE_PATTERNS)):
+        return True
+
+    return False
+
+def get_file_metadata(path):
+    """Get basic metadata for a file"""
+    stat_info = os.stat(path)
+    return {
+        "size": stat_info.st_size,
+        "mtime": stat_info.st_mtime,
+        "ctime": stat_info.st_ctime,
+        "mimetype": mimetypes.guess_type(path)[0] or "application/octet-stream"
+    }
 
 def sort_key(name, path):
     """Return tuple for sorting: (category, lowercase name)"""
@@ -43,29 +72,48 @@ def sort_key(name, path):
 def build_tree(root):
     """Build the directory tree structure"""
     tree = []
-    entries = os.listdir(root)
+
+    try:
+        entries = os.listdir(root)
+    except PermissionError as e:
+        log(f"Permission denied: {root} - {str(e)}", "WARN")
+        return tree
+    except Exception as e:
+        log(f"Error reading {root}: {str(e)}", "ERROR")
+        return tree
 
     for entry in sorted(entries, key=lambda e: sort_key(e, os.path.join(root, e))):
         path = os.path.join(root, entry)
         rel_path = os.path.relpath(path, ROOT_DIR).replace("\\", "/")
 
-        if os.path.isdir(path):
-            tree.append({
-                "type": "dir",
-                "name": entry,
-                "path": rel_path,
-                "children": build_tree(path)
-            })
-        else:
-            tree.append({
-                "type": "file",
-                "name": entry,
-                "path": rel_path
-            })
+        if should_exclude(path):
+            log(f"Excluding: {rel_path}", "DEBUG")
+            continue
+
+        try:
+            if os.path.isdir(path):
+                tree.append({
+                    "type": "dir",
+                    "name": entry,
+                    "path": rel_path,
+                    "children": build_tree(path),
+                    **get_file_metadata(path)
+                })
+            else:
+                tree.append({
+                    "type": "file",
+                    "name": entry,
+                    "path": rel_path,
+                    **get_file_metadata(path)
+                })
+        except Exception as e:
+            log(f"Error processing {path}: {str(e)}", "ERROR")
+            continue
+
     return tree
 
 def render_template(app_name="Xplore", repo_url="#"):
-    """Render the HTML template with provided values"""
+    """Render HTML template with provided values"""
     try:
         env = Environment(loader=FileSystemLoader('.'))
         template = env.get_template(TEMPLATE_FILE)
@@ -73,40 +121,42 @@ def render_template(app_name="Xplore", repo_url="#"):
         rendered = template.render(
             APP_NAME=app_name,
             REPO_URL=repo_url,
-            PAGE_TITLE=f"Xplore: {app_name}"
+            PAGE_TITLE=f"Xplore: {app_name}",
+            BUILD_TIME=datetime.now().isoformat()
         )
 
         with open(INDEX_FILE, 'w', encoding='utf-8') as f:
             f.write(rendered)
 
-        print(f"[Build] Updated {INDEX_FILE} with app name: '{app_name}'")
+        log(f"Updated {INDEX_FILE} with app name: '{app_name}'")
         if repo_url != "#":
-            print(f"[Build] Set repository link to: {repo_url}")
+            log(f"Set repository link to: {repo_url}")
 
     except Exception as e:
-        print(f"[Error] Failed to render template: {str(e)}")
+        log(f"Failed to render template: {str(e)}", "ERROR")
         sys.exit(1)
 
-def is_excluded_file(name):
-    return (
-        name.startswith(".") and name in {".", ".."} or
-        name.endswith("~") or
-        any(name.endswith(p) for p in EXCLUDED_FILE_PATTERNS)
-    )
-
-def is_excluded_dir(name):
-    return (
-        name in EXCLUDED_DIRS or
-        name.startswith("__") or
-        name in {".", ".."}
-    )
-
 def copy_template_files():
-    if not os.path.isdir(SHARE_SRC):
-        print(f"[ERROR] Missing template dir: {SHARE_SRC}")
-        exit(1)
-    shutil.copytree(SHARE_SRC, KTREE_DIR, dirs_exist_ok=True)
-    log(f"Copied template files to {KTREE_DIR}")
+    """Copy template files with error handling"""
+    try:
+        if not os.path.exists(SHARE_SRC):
+            raise FileNotFoundError(f"Template directory not found: {SHARE_SRC}")
+
+        os.makedirs(KTREE_DIR, exist_ok=True)
+
+        for item in os.listdir(SHARE_SRC):
+            src = os.path.join(SHARE_SRC, item)
+            dst = os.path.join(KTREE_DIR, item)
+
+            if os.path.isdir(src):
+                shutil.copytree(src, dst, dirs_exist_ok=True)
+            else:
+                shutil.copy2(src, dst)
+
+        log(f"Copied template files to {KTREE_DIR}")
+    except Exception as e:
+        log(f"Failed to copy templates: {str(e)}", "ERROR")
+        sys.exit(1)
 
 def main():
     # Parse command line arguments
@@ -121,12 +171,16 @@ def main():
     copy_template_files()
 
     # Build file tree structure
-    print(f"[Build] Scanning '{ROOT_DIR}'...")
+    log(f"Scanning '{ROOT_DIR}'...")
     tree = build_tree(ROOT_DIR)
 
-    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-        json.dump(tree, f, indent=2)
-    print(f"[Build] Wrote file tree → {OUTPUT_FILE}")
+    try:
+        with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
+            json.dump(tree, f, indent=2, ensure_ascii=False)
+        log(f"Wrote file tree → {OUTPUT_FILE} ({len(tree)} entries)")
+    except Exception as e:
+        log(f"Failed to save tree.json: {str(e)}", "ERROR")
+        sys.exit(1)
 
     # Render HTML template
     render_template(app_name, repo_url)

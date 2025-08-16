@@ -66,6 +66,25 @@ let editor;
 let selectedItem = null;
 let fullTree = null;
 
+function findReadme(tree) {
+  const readmeNames = ['README.md', 'INDEX.md'];
+
+  function search(nodes) {
+    for (const node of nodes) {
+      if (node.type === 'file' && readmeNames.includes(node.name)) {
+        return node;
+      }
+      if (node.children) {
+        const found = search(node.children);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
+  return search(tree);
+}
+
 require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
 require(["vs/editor/editor.main"], async function () {
   console.log("[Init] Monaco Editor starting...");
@@ -81,6 +100,12 @@ require(["vs/editor/editor.main"], async function () {
   fullTree = await loadFullTree();
   console.log("[Tree] Full structure:", fullTree);
   renderTree(fullTree, document.getElementById("file-tree"));
+
+  // Auto-load README on startup
+  const readme = findReadme(fullTree);
+  if (readme) {
+    await loadFile(readme.path);
+  }
 
   const searchToggle = document.getElementById("search-toggle");
   const searchInput = document.getElementById("file-search");
