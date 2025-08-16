@@ -4,10 +4,11 @@ import json
 import sys
 from jinja2 import Environment, FileSystemLoader
 
-ROOT_DIR = "files"     # folder containing your hosted files
-OUTPUT_DIR = "data"    # where tree.json will be saved
+ROOT_DIR = "files"
+OUTPUT_DIR = "data"
+HTML_DIR = "html"
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, "tree.json")
-TEMPLATE_FILE = "index.html.in"
+TEMPLATE_FILE = os.path.join(HTML_DIR, "index.html.in")
 INDEX_FILE = "index.html"
 
 def sort_key(name, path):

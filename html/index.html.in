@@ -5,7 +5,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>{{ PAGE_TITLE }}</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="html/favicon.ico" type="image/png">
+  <link rel="stylesheet" href="html/styles.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@vscode/codicons/dist/codicon.css">
   <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.min.js"></script>
 </head>
@@ -37,7 +38,7 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script src="html/app.js"></script>
 </body>
 
 </html>
