@@ -285,6 +285,7 @@ function getLanguageFromExt(ext) {
   const map = {
     js: "javascript",
     py: "python",
+    pyw: "python",
     html: "html",
     css: "css",
     json: "json",
@@ -292,8 +293,8 @@ function getLanguageFromExt(ext) {
     txt: "plaintext",
     java: "java",
     c: "c",
-    cpp: "cpp",
     h: "c",
+    cpp: "cpp",
     cs: "csharp",
     php: "php",
     rb: "ruby",
@@ -301,10 +302,16 @@ function getLanguageFromExt(ext) {
     rs: "rust",
     ts: "typescript",
     sh: "shell",
-    mk: "makefile",
+    aliases: "shell",
     rc: "shell",
+    in: "shell",
+    mk: "makefile",
     vim: "vim",
-    lua: "lua"
+    lua: "lua",
+    cfg: "yaml",
+    yml: "yaml",
+    toml: "yaml",
+    yaml: "yaml"
   };
   return map[ext] || "plaintext";
 }
