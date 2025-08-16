@@ -27,7 +27,8 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 3px 10px 0px 0px; /* Top Right Bottom Left */
+  padding: 3px 10px 0px 0px;
+  /* Top Right Bottom Left */
   background: #2d2d2d;
   border-bottom: 1px solid #333;
 }
@@ -94,7 +95,8 @@ body {
 /* Folder Icons */
 .tree .folder::before {
   font-family: "codicon";
-  content: "\eab6"; /* codicon-folder */
+  content: "\eab6";
+  /* codicon-folder */
   position: absolute;
   left: 5px;
   font-size: 16px;
@@ -102,13 +104,14 @@ body {
 }
 
 .tree .folder.expanded::before {
-  content: "\eab4"; /* codicon-folder-opened */
+  content: "\eab4";
+  /* codicon-folder-opened */
   color: #4FC3F7;
   font-size: 16px;
 }
 
 /* Folder Name */
-.tree li.folder > .name {
+.tree li.folder>.name {
   padding: 10px;
   font-weight: 600;
   color: #4FC3F7;
@@ -117,13 +120,14 @@ body {
 /* File Icons */
 .tree .file::before {
   font-family: "codicon";
-  content: "\ea7b"; /* codicon-file */
+  content: "\ea7b";
+  /* codicon-file */
   position: absolute;
   left: 5px;
   color: #c5c5c5;
 }
 
-.tree li.file > .name {
+.tree li.file>.name {
   padding: 10px;
 }
 
@@ -135,11 +139,13 @@ body {
   left: 10px;
   font-size: 12px;
   color: #c5c5c5;
-  transform: rotate(0deg); /* Right arrow for collapsed */
+  transform: rotate(0deg);
+  /* Right arrow for collapsed */
 }
 
-.tree .expanded > .arrow {
-  transform: rotate(90deg); /* down arrow for expanded */
+.tree .expanded>.arrow {
+  transform: rotate(90deg);
+  /* down arrow for expanded */
 }
 
 /* Tree Lines */
@@ -163,7 +169,8 @@ body {
   height: 32px;
   display: flex;
   align-items: center;
-  justify-content: space-between; /* Tabs left, tools right */
+  justify-content: space-between;
+  /* Tabs left, tools right */
   padding: 0 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   background: #1f1f1f;
@@ -250,4 +257,26 @@ body {
 #editor {
   width: 100%;
   height: calc(100% - 32px);
+}
+
+/* For thin scroll bars */
+/* Chrome, Edge, Safari */
+::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #555;
+  border-radius: 1px;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #555 transparent;
 }
