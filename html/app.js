@@ -165,7 +165,7 @@ require(["vs/editor/editor.main"], async function () {
 // Load static tree.json
 async function loadFullTree() {
   console.log("[API] Loading static tree.json");
-  const res = await fetch("__ktree/tree.json");
+  const res = await fetch("__xplore/tree.json");
   const tree = await res.json();
   return tree;
 }

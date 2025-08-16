@@ -9,20 +9,20 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 
 ROOT_DIR = "."
-KTREE_DIR = "__ktree"
-OUTPUT_FILE = os.path.join(KTREE_DIR, "tree.json")
+HTML_DIR = "__xplore"
 INDEX_FILE = "index.html"
-SHARE_SRC = os.path.expanduser("~/.local/share/ktree-monaco")
-TEMPLATE_FILE = os.path.join(KTREE_DIR, "index.html.in")
+TREE_DATA = os.path.join(HTML_DIR, "tree.json")
+TEMPLATE_FILE = os.path.join(HTML_DIR, "index.html.in")
+SHARE_SRC = os.path.expanduser("~/.local/share/xplore-monaco")
 
 # Exclusion patterns
-EXCLUDED_DIRS = {".git", "node_modules", "__pycache__", ".idea", ".vscode", "venv"}
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 EXCLUDED_FILE_PATTERNS = (
     "~", ".tmp", ".swp", ".bak", ".out", ".o", ".so",
     ".pyc", ".pyo", ".pyd", ".class", ".jar", ".war"
 )
 EXCLUDED_FILE_NAMES = {".DS_Store", "desktop.ini"}
-MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+EXCLUDED_DIRS = {".git", "node_modules", "__pycache__", ".idea", ".vscode", "venv"}
 
 def log(msg, level="INFO"):
     """Improved logging with timestamp"""
@@ -142,18 +142,18 @@ def copy_template_files():
         if not os.path.exists(SHARE_SRC):
             raise FileNotFoundError(f"Template directory not found: {SHARE_SRC}")
 
-        os.makedirs(KTREE_DIR, exist_ok=True)
+        os.makedirs(HTML_DIR, exist_ok=True)
 
         for item in os.listdir(SHARE_SRC):
             src = os.path.join(SHARE_SRC, item)
-            dst = os.path.join(KTREE_DIR, item)
+            dst = os.path.join(HTML_DIR, item)
 
             if os.path.isdir(src):
                 shutil.copytree(src, dst, dirs_exist_ok=True)
             else:
                 shutil.copy2(src, dst)
 
-        log(f"Copied template files to {KTREE_DIR}")
+        log(f"Copied template files to {HTML_DIR}")
     except Exception as e:
         log(f"Failed to copy templates: {str(e)}", "ERROR")
         sys.exit(1)
@@ -175,9 +175,9 @@ def main():
     tree = build_tree(ROOT_DIR)
 
     try:
-        with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
+        with open(TREE_DATA, 'w', encoding='utf-8') as f:
             json.dump(tree, f, indent=2, ensure_ascii=False)
-        log(f"Wrote file tree → {OUTPUT_FILE} ({len(tree)} entries)")
+        log(f"Wrote file tree → {TREE_DATA} ({len(tree)} entries)")
     except Exception as e:
         log(f"Failed to save tree.json: {str(e)}", "ERROR")
         sys.exit(1)

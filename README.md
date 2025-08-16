@@ -16,14 +16,14 @@ cd xplore-monaco-static
 make install
 ```
 
-## Build Ktree
+## Build Xplore Webview
 
 Step into the repository that you want to explore and run.
 
 ```bash
-ktree-monaco.py <repo-name> <repo-url>
+xplore-build <repo-name> <repo-url>
 
 Example:
-ktree-monaco.py "XPLORE" "https://gitlab.com/klabkode/devkit/xplore"
+xplore-build "XPLORE" "https://gitlab.com/klabkode/devkit/xplore"
 ```
 ---
