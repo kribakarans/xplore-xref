@@ -17,7 +17,7 @@ clean:
 install: uninstall
 	mkdir -p $(DIRSHARE)
 	cp -r ./html/* $(DIRSHARE)/
-	install -m 755 ./src/build.py $(DIRBIN)/$(TARGET)
+	install -Dm 755 ./src/build.py $(DIRBIN)/$(TARGET)
 
 uninstall:
 	rm -rf $(DIRSHARE)
