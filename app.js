@@ -78,7 +78,7 @@ require(["vs/editor/editor.main"], async function () {
   });
 
   console.log("[Tree] Loading full directory tree...");
-  fullTree = await loadFullTree("");
+  fullTree = await loadFullTree();
   console.log("[Tree] Full structure:", fullTree);
   renderTree(fullTree, document.getElementById("file-tree"));
 
@@ -137,18 +137,12 @@ require(["vs/editor/editor.main"], async function () {
   });
 });
 
-// Recursively fetch the entire tree
-async function loadFullTree(path) {
-  console.log("[API] GET /api/tree", { path });
-  const res = await fetch(`/api/tree?path=${encodeURIComponent(path)}`);
-  const items = await res.json();
-  console.log("[API] Tree response:", items);
-  for (const item of items) {
-    if (item.type === "dir") {
-      item.children = await loadFullTree(item.path);
-    }
-  }
-  return items;
+// Load static tree.json
+async function loadFullTree() {
+  console.log("[API] Loading static tree.json");
+  const res = await fetch("data/tree.json");
+  const tree = await res.json();
+  return tree;
 }
 
 // Render tree from data
@@ -232,18 +226,23 @@ function searchTree(query, nodes) {
   return results;
 }
 
-// Load file content into Monaco
+// Load file directly from /files/
 async function loadFile(path) {
-  console.log("[API] GET /api/file", { path });
+  console.log("[API] Loading raw file:", path);
   try {
-    const res = await fetch(`/api/file?path=${encodeURIComponent(path)}`);
-    const data = await res.json();
-    console.log("[API] File response:", data);
-    if (data.error) {
-      alert(`Error: ${data.error}`);
+    const res = await fetch(`files/${path}`);
+    if (!res.ok) {
+      alert(`Error loading file: ${path}`);
       return;
     }
-    openTab(data);
+    const text = await res.text();
+    const name = path.split("/").pop();
+    openTab({
+      name,
+      path,
+      content: text,
+      binary: false
+    });
   } catch (err) {
     console.error("[Error] Loading file:", err);
   }
