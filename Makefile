@@ -20,7 +20,7 @@ install: uninstall
 	install -Dm 755 ./src/build.py $(DIRBIN)/$(TARGET)
 
 uninstall:
-	rm -rf $(DIRSHARE)
-	rm -f $(DIRBIN)/$(TARGET)
+	rm -rvf $(DIRSHARE)
+	rm -vf $(DIRBIN)/$(TARGET)
 
 .PHONY: install uninstall

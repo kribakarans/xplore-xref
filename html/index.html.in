@@ -9,6 +9,15 @@
   <link rel="stylesheet" href="__xplore/styles.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@vscode/codicons/dist/codicon.css">
   <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.min.js"></script>
+
+  <!-- Markdown preview using markdown-it + highlight.js -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/12.3.2/markdown-it.min.js"></script>
+
+  <!-- Optional: enable DOCX / XLSX previews used by app.js (safe to leave commented) -->
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script> -->
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script> -->
 </head>
 
 <body class="vscode-theme-dark">
@@ -18,7 +27,7 @@
         <h3 onclick="window.open('{{ REPO_URL }}', '_blank')" class="{{ 'clickable' if REPO_URL != '#' else '' }}">
           {{ APP_NAME }}
         </h3>
-        <span id="search-toggle" class="codicon codicon-search"></span>
+        <span id="search-toggle" class="codicon codicon-search" title="Toggle file search"></span>
       </div>
       <input type="text" id="file-search" placeholder="Search files..." style="display:none;" />
       <ul id="file-tree" class="tree" role="tree" aria-label="File explorer"></ul>
@@ -28,15 +37,77 @@
       <div id="editor-toolbar">
         <div id="tabs"></div>
         <div id="editor-tools">
-          <span id="editor-symbols" class="codicon codicon-symbol-method" title="Go to Symbol"></span>
+          <!-- Jump history (wired in JS) -->
+          <span id="nav-back" class="codicon codicon-arrow-left" title="Navigate Back (Alt+←)"></span>
+          <span id="nav-forward" class="codicon codicon-arrow-right" title="Navigate Forward (Alt+→)"></span>
+
+          <!-- Preview toggle (Markdown/HTML + common binaries if supported) -->
+          <span id="editor-preview" class="codicon codicon-eye" title="Toggle Preview (MD/HTML)"></span>
+
+          <!-- Symbols / Editor tools -->
+          <span id="workspace-symbols" class="codicon codicon-symbol-structure" title="Workspace Symbols (Ctrl+T)"></span>
+          <span id="file-symbols" class="codicon codicon-list-selection" title="File Symbols (Ctrl+Shift+O)"></span>
+          <span id="editor-symbols" class="codicon codicon-symbol-method" title="Monaco Quick Outline"></span>
           <span id="editor-wrap" class="codicon codicon-word-wrap" title="Toggle Word Wrap"></span>
           <span id="editor-minimap" class="codicon codicon-map" title="Toggle Minimap"></span>
-          <span id="editor-search" class="codicon codicon-search" title="Search in File"></span>
+          <span id="editor-search" class="codicon codicon-search" title="Find in File"></span>
         </div>
       </div>
-      <div id="editor"></div>
+
+      <div id="content">
+        <!-- Editor and Preview share the same grid cell -->
+        <div id="editor"></div>
+        <div id="preview">
+          <iframe
+            id="preview-frame"
+            sandbox="allow-same-origin allow-scripts allow-forms allow-popups">
+          </iframe>
+        </div>
+
+        <!-- Outline (right) -->
+        <aside id="outline">
+          <div id="outline-header">
+            <span class="title">Outline</span>
+            <input id="outline-filter" type="text" placeholder="Filter symbols…" />
+          </div>
+          <ul id="outline-list"></ul>
+        </aside>
+      </div>
+
+      <!-- Status Bar -->
+      <div id="statusbar" role="status" aria-live="polite">
+        <div id="status-left"><span class="codicon codicon-file"></span> —</div>
+        <div id="status-center">Ready.</div>
+        <div id="status-right">Ln 1, Col 1 • WRAP: OFF • MINIMAP: ON</div>
+      </div>
     </div>
   </div>
+
+  <!-- Symbol palette (global/file) -->
+  <div id="symbol-modal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-tabs">
+        <button data-tab="workspace" class="active">Workspace</button>
+        <button data-tab="file">File</button>
+      </div>
+      <input id="symbol-query" type="text" placeholder="Type to search symbols…" />
+      <ul id="symbol-results" role="listbox"></ul>
+    </div>
+  </div>
+
+  <!-- References modal -->
+  <div id="refs-modal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span id="refs-title">References</span>
+        <button id="refs-close" class="modal-close" title="Close">×</button>
+      </div>
+      <ul id="refs-results" role="listbox"></ul>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" role="status" aria-live="polite"></div>
 
   <script src="__xplore/app.js"></script>
 </body>

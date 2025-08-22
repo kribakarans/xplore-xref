@@ -4,6 +4,7 @@ import json
 import sys
 import shutil
 import mimetypes
+import subprocess
 from datetime import datetime
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
@@ -14,6 +15,7 @@ INDEX_FILE = "index.html"
 TREE_DATA = os.path.join(HTML_DIR, "tree.json")
 TEMPLATE_FILE = os.path.join(HTML_DIR, "index.html.in")
 SHARE_SRC = os.path.expanduser("~/.local/share/xplore-monaco")
+TAGS_FILE = os.path.join(HTML_DIR, "tags.json")
 
 # Exclusion patterns
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
@@ -158,6 +160,82 @@ def copy_template_files():
         log(f"Failed to copy templates: {str(e)}", "ERROR")
         sys.exit(1)
 
+def build_xref(root: str = ROOT_DIR, outfile: str = TAGS_FILE) -> bool:
+    """
+    Generate a Universal Ctags cross-reference database (JSON) for a multi-language project.
+
+    Python port of:
+        ctags -R --output-format=json --fields=+nKlsiaSt --extras=+q \
+              --kinds-C=+p --kinds-C++=+p \
+              --languages=C,C++,Python,Java,Sh,Make -f __xplore/tags.json .
+
+    Args:
+        root: Directory to index recursively.
+        outfile: Output JSON file path.
+
+    Returns:
+        True on success, False otherwise.
+    """
+    try:
+        os.makedirs(os.path.dirname(outfile), exist_ok=True)
+    except Exception as e:
+        log(f"Failed to ensure tags directory: {e}", "ERROR")
+        return False
+
+    if shutil.which("ctags") is None:
+        log("Universal Ctags ('ctags') not found in PATH. Please install it.", "ERROR")
+        return False
+
+    # Remove any stale file
+    try:
+        if os.path.exists(outfile):
+            os.remove(outfile)
+    except Exception as e:
+        log(f"Failed to remove existing tags file '{outfile}': {e}", "WARN")
+
+    log(f"Generating ctags database into {outfile}", "INFO")
+
+    cmd = [
+        "ctags",
+        "-R",
+        "--output-format=json",
+        "--fields=+nKlsiaSt",
+        "--extras=+q",
+        "--kinds-C=+p",
+        "--kinds-C++=+p",
+        "--languages=C,C++,Python,Java,Sh,Make",
+        "-f", outfile,
+        root,
+    ]
+
+    try:
+        result = subprocess.run(
+            cmd,
+            check=False,
+            text=True,
+            capture_output=True,
+        )
+
+        if result.stdout:
+            log(result.stdout.strip(), "DEBUG")
+        if result.stderr:
+            level = "ERROR" if result.returncode != 0 else "DEBUG"
+            log(result.stderr.strip(), level)
+
+        if result.returncode == 0 and os.path.exists(outfile):
+            log(f"Tags JSON generated successfully: {outfile}", "INFO")
+            return True
+
+        log("Failed to generate tags (ctags returned non-zero exit code).", "ERROR")
+        return False
+
+    except FileNotFoundError:
+        log("ctags executable not found. Ensure Universal Ctags is installed.", "ERROR")
+        return False
+    except Exception as e:
+        log(f"Unexpected error while running ctags: {e}", "ERROR")
+        return False
+
 def main():
     # Parse command line arguments
     app_name = "Xplore"  # default value
@@ -181,6 +259,10 @@ def main():
     except Exception as e:
         log(f"Failed to save tree.json: {str(e)}", "ERROR")
         sys.exit(1)
+
+    # Generate tags database (xref). Non-fatal if it fails; proceed with HTML.
+    if not build_xref(ROOT_DIR, TAGS_FILE):
+        log("Continuing without tags.json due to previous error.", "WARN")
 
     # Render HTML template
     render_template(app_name, repo_url)

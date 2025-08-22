@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{TITLE}}</title>
+
+<!-- Syntax highlighting (GitHub Dark style) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/github-dark.min.css">
+
+<style>
+  :root {
+    /* VS Code (Dark+) inspired tokens */
+    --vscode-font: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    --vscode-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+    --vscode-bg: #1e1e1e;
+    --vscode-fg: #d4d4d4;
+    --vscode-heading: #e5e5e5;
+    --vscode-border: #2d2d2d;
+    --vscode-panel: #1b1b1b;
+    --vscode-panel-contrast: #252526;
+    --vscode-inlinecode-bg: #1f1f1f;
+    --vscode-code-border: #2d2d2d;
+    --vscode-link: #4ea6ff;
+    --vscode-blockquote: #808080;
+    --vscode-table-row: #1f1f1f;
+    --vscode-hr: #303030;
+  }
+
+  html, body { height: 100%; }
+  body {
+    margin: 24px;
+    background: var(--vscode-bg);
+    color: var(--vscode-fg);
+    font: 13.5px/1.6 var(--vscode-font);
+  }
+
+  .vscode-body { max-width: 1100px; margin: 0 auto; }
+
+  /* Headings */
+  .vscode-body h1, .vscode-body h2, .vscode-body h3,
+  .vscode-body h4, .vscode-body h5, .vscode-body h6 {
+    color: var(--vscode-heading);
+    line-height: 1.25;
+    margin: 24px 0 8px;
+    font-weight: 600;
+  }
+  .vscode-body h1 { font-size: 1.8rem; border-bottom: 1px solid var(--vscode-border); }
+  .vscode-body h2 { font-size: 1.55rem; border-bottom: 1px solid var(--vscode-border); }
+  .vscode-body h3 { font-size: 1.35rem; border-bottom: 1px solid var(--vscode-border); }
+
+  /* Links */
+  .vscode-body a { color: var(--vscode-link); text-decoration: none; }
+  .vscode-body a:hover { text-decoration: underline; }
+
+  /* Lists */
+  .vscode-body ul, .vscode-body ol { padding-left: 1.4em; }
+
+  /* Blockquote */
+  .vscode-body blockquote {
+    border-left: 4px solid var(--vscode-blockquote);
+    color: #c9c9c9;
+    background: var(--vscode-panel);
+    padding: 8px 12px;
+    margin-left: 8px;
+    border-radius: 0 4px 4px 0;
+  }
+
+  /* Inline code */
+  .vscode-body code {
+    font-family: var(--vscode-mono);
+    font-size: 0.95em;
+    background: var(--vscode-inlinecode-bg);
+    border: 1px solid var(--vscode-code-border);
+    padding: 2px 4px;
+    border-radius: 4px;
+  }
+
+  /* Code blocks */
+  .vscode-body pre {
+    background: var(--vscode-bg); /* blend with editor background */
+    border: 1px solid var(--vscode-code-border);
+    border-radius: 6px;
+    overflow: auto;
+    padding: 12px;
+  }
+  .vscode-body pre code {
+    display: block;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    font-size: 0.95em;
+    line-height: 1.45;
+  }
+
+  /* Tables */
+  .vscode-body table {
+    border-collapse: collapse;
+    width: 100%;
+    border: 1px solid var(--vscode-border);
+    border-radius: 4px;
+  }
+  .vscode-body th, .vscode-body td {
+    border: 1px solid var(--vscode-border);
+    padding: 6px 10px;
+  }
+  .vscode-body th { background: var(--vscode-panel-contrast); font-weight: 600; }
+  .vscode-body tr:nth-child(even) td { background: var(--vscode-table-row); }
+
+  /* Horizontal rule */
+  .vscode-body hr { height: 1px; border: 0; background: var(--vscode-hr); margin: 24px 0; }
+
+  /* Images */
+  .vscode-body img { max-width: 100%; display: inline-block; }
+</style>
+
+<div id="fileContent" class="vscode-body"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/12.3.2/markdown-it.min.js"></script>
+<script>
+  function decodeB64(b){
+    try { return decodeURIComponent(escape(atob(b))); }
+    catch(e){ return atob(b); }
+  }
+
+  (function(){
+    try {
+      var content = decodeB64("{{CONTENT_B64}}");
+      var md = window.markdownit({
+        html: true,
+        linkify: true,
+        breaks: false,
+        highlight: function(str, lang){
+          try {
+            if (window.hljs) {
+              if (lang && hljs.getLanguage(lang)) {
+                return '<pre><code class="hljs language-' + lang + '">' +
+                       hljs.highlight(str, { language: lang, ignoreIllegals: true }).value +
+                       '</code></pre>';
+              }
+              return '<pre><code class="hljs">' + hljs.highlightAuto(str).value + '</code></pre>';
+            }
+          } catch(_) {}
+          return '<pre><code>' + md.utils.escapeHtml(str) + '</code></pre>';
+        }
+      });
+
+      var target = document.getElementById("fileContent");
+      target.innerHTML = md.render(content);
+
+      // Disable task list checkboxes (like VS Code)
+      target.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.disabled = true);
+
+      if (window.hljs) hljs.highlightAll();
+    } catch (err) {
+      try { parent.postMessage({ type: "xplore-md-failed" }, "*"); } catch(_) {}
+    }
+  })();
+</script>
