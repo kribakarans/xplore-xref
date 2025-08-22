@@ -176,17 +176,19 @@ def build_xref(root: str = ROOT_DIR, outfile: str = TAGS_FILE) -> bool:
     Returns:
         True on success, False otherwise.
     """
+    # Ensure output directory exists
     try:
         os.makedirs(os.path.dirname(outfile), exist_ok=True)
     except Exception as e:
         log(f"Failed to ensure tags directory: {e}", "ERROR")
         return False
 
+    # Check ctags availability
     if shutil.which("ctags") is None:
         log("Universal Ctags ('ctags') not found in PATH. Please install it.", "ERROR")
         return False
 
-    # Remove any stale file
+    # Remove stale file
     try:
         if os.path.exists(outfile):
             os.remove(outfile)
