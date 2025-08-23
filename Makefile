@@ -9,6 +9,8 @@ RELEASE   := 1.0
 DIRBIN    := $(PREFIX)/bin
 DIRSHARE  := $(PREFIX)/share/xplore-xref
 
+SRCHTML   := src/html
+
 all:
 
 clean:
@@ -16,7 +18,7 @@ clean:
 
 install: uninstall
 	mkdir -p $(DIRSHARE)
-	cp -r ./html/* $(DIRSHARE)/
+	cp -r $(SRCHTML)/* $(DIRSHARE)/
 	install -Dm 755 ./src/build.py $(DIRBIN)/$(TARGET)
 
 uninstall:
