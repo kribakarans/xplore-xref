@@ -3,11 +3,11 @@
 PREFIX := $(HOME)/.local
 
 PACKAGE   := Xplore
-TARGET    := xplore-build
+TARGET    := xplore-build-xref
 RELEASE   := 1.0
 
 DIRBIN    := $(PREFIX)/bin
-DIRSHARE  := $(PREFIX)/share/xplore-monaco
+DIRSHARE  := $(PREFIX)/share/xplore-xref
 
 all:
 

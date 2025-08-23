@@ -14,7 +14,7 @@ HTML_DIR = "__xplore"
 INDEX_FILE = "index.html"
 TREE_DATA = os.path.join(HTML_DIR, "tree.json")
 TEMPLATE_FILE = os.path.join(HTML_DIR, "index.html.in")
-SHARE_SRC = os.path.expanduser("~/.local/share/xplore-monaco")
+SHARE_SRC = os.path.expanduser("~/.local/share/xplore-xref")
 TAGS_FILE = os.path.join(HTML_DIR, "tags.json")
 
 # Exclusion patterns
