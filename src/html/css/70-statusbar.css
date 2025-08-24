@@ -1,0 +1,21 @@
+/* Status Bar */
+#statusbar {
+  height: 24px;
+  background: #0f0f0f;
+  border-top: 1px solid #333;
+  color: #c7c7c7;
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+#status-left, #status-center, #status-right {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#status-center { text-align: center; color: #ddd; }
+#status-right { text-align: right; color: #aaa; }
+#status-left .codicon { margin-right: 6px; }

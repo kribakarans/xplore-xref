@@ -1,0 +1,121 @@
+/* Sidebar (file explorer) */
+#sidebar {
+  width: 280px;
+  background-color: #252526;
+  color: #ccc;
+  overflow-y: auto;
+  border-right: 1px solid #333;
+}
+
+#sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 10px 0px 0px; /* Top Right Bottom Left */
+  background: #2d2d2d;
+  border-bottom: 1px solid #333;
+}
+
+#sidebar h3 {
+  margin: 0;
+  padding: 10px 5px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #bbb;
+  background-color: #2d2d2d;
+}
+
+#search-toggle { font-size: 16px; color: #bbb; cursor: pointer; }
+#search-toggle:hover { color: #fff; }
+
+#file-search {
+  width: calc(100% - 30px);
+  margin: 6px 10px;
+  padding: 4px 8px;
+  background-color: #1e1e1e;
+  border: 1px solid #555;
+  border-radius: 3px;
+  color: #ccc;
+  font-size: 12px;
+}
+#file-search:focus { outline: none; border-color: #4FC3F7; }
+
+/* Tree */
+.tree { list-style: none; margin: 0; padding-left: 0; font-size: 16px; }
+.tree li { position: relative; padding: 3px 8px 3px 20px; cursor: pointer; white-space: nowrap; }
+
+/* Hover/selection */
+.tree li:hover { background-color: #2a2d2e; }
+.tree li.folder.expanded:hover { background-color: transparent; } /* no hover flash on expanded folders */
+.tree li.selected { background-color: #094771; color: white; }
+
+/* ——— Active-context shading ———
+   Shade ONLY the expanded folder that contains the currently selected item */
+.tree li.folder.expanded.active-context,
+.tree li.folder.expanded.active-context > ul {
+  background-color: #2d2d2d;
+}
+
+/* If a deeper child folder is also active-context & expanded, clear parent’s shade (modern :has) */
+.tree li.folder.expanded.active-context:has(> ul > li.folder.expanded.active-context),
+.tree li.folder.expanded.active-context:has(> ul > li.folder.expanded.active-context) > ul {
+  background-color: transparent;
+}
+
+/* Never shade expanded folders that are not in the active context */
+.tree li.folder.expanded:not(.active-context),
+.tree li.folder.expanded:not(.active-context) > ul {
+  background-color: transparent;
+}
+
+/* JS fallback classes (applied by tree.js when :has is missing) */
+.tree li.folder.shade-block,
+.tree li.folder.shade-block > ul { background-color: #2d2d2d; }
+
+/* Folder icons */
+.tree .folder::before {
+  font-family: "codicon";
+  content: "\eab6"; /* codicon-folder */
+  position: absolute;
+  left: 5px;
+  font-size: 16px;
+  color: #4FC3F7;
+}
+.tree .folder.expanded::before {
+  content: "\eab4"; /* codicon-folder-opened */
+  color: #4FC3F7;
+  font-size: 16px;
+}
+
+/* Folder name */
+.tree li.folder > .name { padding: 10px; font-weight: 600; color: #4FC3F7; }
+
+/* File icons */
+.tree .file::before {
+  font-family: "codicon";
+  content: "\ea7b"; /* codicon-file */
+  position: absolute;
+  left: 5px;
+  color: #c5c5c5;
+}
+.tree li.file > .name { padding: 10px; }
+
+/* Arrow icons */
+.tree .arrow {
+  font-family: "codicon";
+  content: "\eab8";
+  position: absolute;
+  left: 10px;
+  font-size: 12px;
+  color: #c5c5c5;
+  transform: rotate(0deg); /* Right arrow for collapsed */
+}
+.tree .expanded > .arrow { transform: rotate(90deg); } /* down arrow */
+
+/* Tree lines */
+.tree ul {
+  list-style: none;
+  margin: 0;
+  padding-left: 5px;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}

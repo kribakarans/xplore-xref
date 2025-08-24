@@ -1,0 +1,16 @@
+/* Preview surface shares grid cell with #editor */
+#preview {
+  display: none;
+  width: 100%;
+  height: 100%;
+}
+#preview.show { display: block; }
+#preview, #editor { grid-column: 1 / 2; grid-row: 1 / 2; }
+
+/* Preview iframe fills the container */
+#preview-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #1e1e1e;
+}

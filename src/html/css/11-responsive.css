@@ -1,0 +1,5 @@
+/* Mobile behavior deferred for now per request.
+   This file just carries the outline toggle, no breakpoints. */
+
+/* Hide right column when outline is hidden (main expands via grid) */
+body.outline-hidden #right { display: none; }

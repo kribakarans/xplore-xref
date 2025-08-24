@@ -1,0 +1,53 @@
+/* Tabs tray */
+#tabs {
+  display: flex;
+  height: 35px;                 /* matches toolbar height */
+  align-items: center;
+  background: #1f1f1f;
+  overflow-x: auto;             /* horizontal scroll when needed */
+  overflow-y: hidden;
+  white-space: nowrap;          /* prevent wrapping */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Individual tabs */
+.tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  height: 100%;
+  cursor: pointer;
+  background: transparent;      /* inactive tabs flat */
+  border-right: 1px solid #333;
+  color: #aaa;
+  font-size: 14px;
+  white-space: nowrap;
+  flex: 0 0 auto;               /* don’t shrink; tray scrolls instead */
+  transition: background .12s ease, color .12s ease;
+}
+.tab:hover { background: #2a2a2a; }
+
+.tab.active {
+  background: #2d2d2d;          /* highlight only the active tab */
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Bottom underline for active tab */
+.tab.active::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2px;
+  background: #4FC3F7;
+}
+
+/* Close button */
+.tab .close {
+  margin-left: 6px;
+  font-size: 20px;
+  color: #999;
+  cursor: pointer;
+}
+.tab .close:hover { color: #fff; }

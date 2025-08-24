@@ -968,7 +968,10 @@ function parseIncludesFromModel(model, filename) {
   const looksMake = lowerName === 'makefile' || /\.mk$/.test(lowerName) || /\.mak$/.test(lowerName);
 
   // C/C++
-  const reC = /^\s*#\s*include\s*([<"])\s*([^>"]+)\s*[>"]/;
+  const reC = /^\s*#\s*include\s*([<"])\s*([^>"]+)\s*[>"];/;
+
+  // NOTE: fixed to also match lines without trailing semicolon in includes
+  const reCCompat = /^\s*#\s*include\s*([<"])\s*([^>"]+)\s*[>"]/;
 
   // Python
   const rePyImport = /^\s*import\s+([A-Za-z_][\w\.]*(?:\s*,\s*[A-Za-z_][\w\.]*)*)/;
@@ -1014,10 +1017,11 @@ function parseIncludesFromModel(model, filename) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    // C/C++
-    if (/\b(c|h)(pp|xx)?$/.test(ext)) {
-      const m = reC.exec(line);
-      if (m) { results.push({ lang: "c/cpp", name: m[2], line: i + 1, kind: "include" }); continue; }
+    // C/C++ (support with or without trailing semicolon)
+    let mC = reC.exec(line) || reCCompat.exec(line);
+    if (mC && /\b(c|h)(pp|xx)?$/.test(ext)) {
+      results.push({ lang: "c/cpp", name: mC[2], line: i + 1, kind: "include" });
+      continue;
     }
 
     // Python

@@ -6,23 +6,27 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>{{ PAGE_TITLE }}</title>
   <link rel="icon" href="__xplore/favicon.ico" type="image/png">
+
+  <!-- Aggregated stylesheet -->
   <link rel="stylesheet" href="__xplore/styles.css" />
+
+  <!-- Codicons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@vscode/codicons/dist/codicon.css">
+
+  <!-- Monaco loader -->
   <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.min.js"></script>
 
-  <!-- Markdown preview using markdown-it + highlight.js -->
+  <!-- Markdown preview (with highlight.js) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/github-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/12.3.2/markdown-it.min.js"></script>
-
-  <!-- Optional: enable DOCX / XLSX previews used by app.js (safe to leave commented) -->
-  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script> -->
-  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script> -->
 </head>
 
 <body class="vscode-theme-dark">
-  <div id="app">
-    <div id="sidebar">
+  <!-- GRID SHELL: left | main | right ; statusbar spans -->
+  <div id="app" role="application" aria-label="Editor Shell">
+    <!-- Left panel (Explorer) -->
+    <div id="sidebar" aria-label="Sidebar Left">
       <div id="sidebar-header">
         <h3 onclick="window.open('{{ REPO_URL }}', '_blank')" class="{{ 'clickable' if REPO_URL != '#' else '' }}">
           {{ APP_NAME }}
@@ -33,62 +37,71 @@
       <ul id="file-tree" class="tree" role="tree" aria-label="File explorer"></ul>
     </div>
 
-    <div id="main">
+    <!-- Main area (Editor + Preview only) -->
+    <div id="main" aria-label="Editor">
       <div id="editor-toolbar">
         <div id="tabs"></div>
         <div id="editor-tools">
-          <!-- Jump history (wired in JS) -->
           <span id="nav-back" class="codicon codicon-arrow-left" title="Navigate Back (Alt+←)"></span>
           <span id="nav-forward" class="codicon codicon-arrow-right" title="Navigate Forward (Alt+→)"></span>
-
-          <!-- Preview toggle (Markdown/HTML + common binaries if supported) -->
           <span id="editor-preview" class="codicon codicon-eye" title="Toggle Preview (MD/HTML)"></span>
-
-          <!-- Symbols / Editor tools -->
           <span id="workspace-symbols" class="codicon codicon-symbol-structure" title="Workspace Symbols (Ctrl+T)"></span>
           <span id="file-symbols" class="codicon codicon-list-selection" title="File Symbols (Ctrl+Shift+O)"></span>
           <span id="editor-symbols" class="codicon codicon-symbol-method" title="Monaco Quick Outline"></span>
           <span id="editor-wrap" class="codicon codicon-word-wrap" title="Toggle Word Wrap"></span>
           <span id="editor-minimap" class="codicon codicon-map" title="Toggle Minimap"></span>
           <span id="editor-search" class="codicon codicon-search" title="Find in File"></span>
+          <!-- Outline toggle -->
+          <span id="toggle-outline" class="codicon codicon-layout-sidebar-right" title="Hide Outline panel" aria-pressed="true"></span>
         </div>
       </div>
 
+      <!-- Breadcrumbs -->
+      <div id="breadcrumbs" aria-label="Breadcrumbs"></div>
+
+      <!-- Editor/Preview content -->
       <div id="content">
-        <!-- Editor and Preview share the same grid cell -->
         <div id="editor"></div>
         <div id="preview">
-          <iframe
-            id="preview-frame"
-            sandbox="allow-same-origin allow-scripts allow-forms allow-popups">
+          <iframe id="preview-frame"
+                  sandbox="allow-same-origin allow-scripts allow-forms allow-popups">
           </iframe>
         </div>
-
-        <!-- Outline (right) -->
-        <aside id="outline">
-          <div id="outline-header">
-            <span class="title">Outline</span>
-            <input id="outline-filter" type="text" placeholder="Filter symbols…" />
-          </div>
-          <ul id="outline-list"></ul>
-        </aside>
-      </div>
-
-      <!-- Status Bar -->
-      <div id="statusbar" role="status" aria-live="polite">
-        <div id="status-left"><span class="codicon codicon-file"></span> —</div>
-        <div id="status-center">Ready.</div>
-        <div id="status-right">Ln 1, Col 1 • WRAP: OFF • MINIMAP: ON</div>
       </div>
     </div>
+
+    <!-- Right panel (Outline only) -->
+    <div id="right" aria-label="Sidebar Right">
+      <aside id="outline">
+        <div id="outline-header">
+          <span class="title">Outline</span>
+          <input id="outline-filter" type="text" placeholder="Filter symbols…" />
+        </div>
+        <ul id="outline-list"></ul>
+      </aside>
+    </div>
+
+    <!-- Status bar (spans all columns) -->
+    <div id="statusbar" role="status" aria-live="polite">
+      <div id="status-left"><span class="codicon codicon-file"></span> —</div>
+      <div id="status-center">Ready.</div>
+      <div id="status-right">Ln 1, Col 1 • WRAP: OFF • MINIMAP: ON</div>
+    </div>
+
+    <!-- Invisible gutters (desktop) -->
+    <div class="gutter gutter-left" role="separator" aria-orientation="vertical"
+         aria-label="Resize left panel" tabindex="0" title="Drag to resize • Double-click to reset"></div>
+    <div class="gutter gutter-right" role="separator" aria-orientation="vertical"
+         aria-label="Resize right panel" tabindex="0" title="Drag to resize • Double-click to reset"></div>
   </div>
 
-  <!-- Symbol palette (global/file) -->
+  <!-- Modals (kept at end so DOM is ready when JS registers) -->
   <div id="symbol-modal" aria-hidden="true">
     <div class="modal-card">
       <div class="modal-tabs">
         <button data-tab="workspace" class="active">Workspace</button>
         <button data-tab="file">File</button>
+        <button id="symbol-close" class="modal-close" title="Close">×</button>
       </div>
       <input id="symbol-query" type="text" placeholder="Type to search symbols…" />
       <ul id="symbol-results" role="listbox"></ul>
@@ -106,10 +119,10 @@
     </div>
   </div>
 
-  <!-- Toast -->
   <div id="toast" role="status" aria-live="polite"></div>
 
-  <script src="__xplore/app.js"></script>
+  <!-- Scripts -->
+  <script type="module" src="__xplore/js/ui-layout.js"></script>
+  <script type="module" src="__xplore/js/app.js"></script>
 </body>
-
 </html>

@@ -1,0 +1,116 @@
+/* Desktop grid layout with adjustable left & right panels.
+   Left: #sidebar, Center: #main, Right: #right, Footer: #statusbar
+   Outline stays in #right; all editor widgets live in #main. */
+
+:root {
+  --left-pane: 240px;
+  --right-pane: 280px;
+  --min-left: 160px;
+  --max-left: 600px;
+  --min-right: 180px;
+  --max-right: 600px;
+  --ruler-color: #007acc;
+  --ruler-width: 2px;
+  --gutter-hit: 8px;
+}
+
+/* Top-level grid: three columns + status row */
+#app {
+  position: relative;
+  display: grid;
+  height: 100vh;
+  width: 100%;
+  grid-template-columns:
+    minmax(var(--min-left), var(--left-pane))
+    minmax(320px, 1fr)
+    minmax(var(--min-right), var(--right-pane));
+  grid-template-rows: 1fr 24px; /* content row + statusbar row */
+  gap: 0;
+}
+
+/* Ensure grid children can shrink/grow (VERY IMPORTANT for Monaco) */
+#sidebar, #main, #right { min-width: 0; min-height: 0; }
+
+/* Place items */
+#sidebar { grid-column: 1 / 2; grid-row: 1 / 2; }
+#main    { grid-column: 2 / 3; grid-row: 1 / 2; }
+#right   { grid-column: 3 / 4; grid-row: 1 / 2; }
+#statusbar { grid-column: 1 / 4; grid-row: 2 / 3; }
+
+/* Left sidebar */
+#sidebar {
+  width: auto !important;
+  background: #252526;
+  color: #ccc;
+  border-right: 1px solid #333;
+  overflow: hidden;
+}
+#file-tree { height: 100%; overflow: auto; }
+
+/* Main column: toolbar + breadcrumbs + editor area */
+#main {
+  display: grid;
+  grid-template-rows: 32px 24px 1fr; /* toolbar, breadcrumbs, editor area */
+  background: #1e1e1e;
+  color: #ddd;
+  min-height: 0; /* allows the 1fr row to actually shrink/grow */
+}
+
+#editor-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #2d2d2d; border-bottom: 1px solid #333; padding: 0 8px;
+}
+
+#breadcrumbs {
+  background: #202020; border-bottom: 1px solid #333;
+  padding: 2px 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+#content {
+  /* Make this the flex container so the editor can fill height reliably */
+  display: flex; flex-direction: column;
+  min-height: 0; /* critical for nested flex in grid */
+}
+
+#editor {
+  /* Monaco container */
+  flex: 1 1 auto;
+  min-height: 0; /* critical so it can grow within grid/flex */
+  width: 100%;
+}
+
+#preview { display: none; } /* JS controls preview visibility */
+
+/* Right panel (Outline only) */
+#right {
+  background: #1b1b1b;
+  border-left: 1px solid #333;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+#outline { height: 100%; overflow: auto; }
+
+/* Status bar */
+#statusbar {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #0f0f0f; color: #9da3ad; padding: 0 12px; font-size: 12px;
+  border-top: 1px solid #333;
+}
+
+/* Gutters */
+.gutter {
+  position: absolute;
+  width: var(--gutter-hit);
+  cursor: col-resize;
+  user-select: none; touch-action: none; outline: none; background: transparent;
+}
+.gutter::before {
+  content: ""; position: absolute; left: 50%; top: 0; bottom: 0;
+  width: var(--ruler-width); transform: translateX(-50%);
+  background: transparent; pointer-events: none; transition: background 120ms ease;
+}
+.gutter:hover::before, .gutter.is-dragging::before, .gutter:focus-visible::before { background: var(--ruler-color); }
+.gutter-left  { left: 0; }
+.gutter-right { right: 0; }
+
+/* Outline toggle (desktop) */
+body.outline-hidden #right { display: none; }
