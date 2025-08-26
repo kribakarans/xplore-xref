@@ -45,10 +45,10 @@
           <span id="nav-back" class="codicon codicon-arrow-left" title="Navigate Back (Alt+←)"></span>
           <span id="nav-forward" class="codicon codicon-arrow-right" title="Navigate Forward (Alt+→)"></span>
           <span id="editor-preview" class="codicon codicon-eye" title="Toggle Preview (MD/HTML)"></span>
-          <span id="workspace-symbols" class="codicon codicon-symbol-structure" title="Workspace Symbols (Ctrl+T)"></span>
+
+          <!-- Symbols: keep only File Symbols (Workspace handled via modal toggle) -->
           <span id="file-symbols" class="codicon codicon-list-selection" title="File Symbols (Ctrl+Shift+O)"></span>
           <span id="workspace-grep" class="codicon codicon-search-sparkle" title="Grep in Workspace (Ctrl+Shift+F)"></span>
-          <span id="editor-symbols" class="codicon codicon-symbol-method" title="Monaco Quick Outline"></span>
           <span id="editor-wrap" class="codicon codicon-word-wrap" title="Toggle Word Wrap"></span>
           <span id="editor-minimap" class="codicon codicon-map" title="Toggle Minimap"></span>
           <span id="editor-search" class="codicon codicon-search" title="Find in File"></span>
@@ -97,7 +97,7 @@
   </div>
 
   <!-- Modals (kept at end so DOM is ready when JS registers) -->
-  <!-- 🔹 Symbol Modal -->
+  <!-- Symbol Modal -->
   <div id="symbol-modal" class="modal" aria-hidden="true">
     <div class="modal-card">
       <div class="modal-tabs">
@@ -114,7 +114,7 @@
     </div>
   </div>
 
-  <!-- 🔹 References Modal -->
+  <!-- References Modal -->
   <div id="refs-modal" class="modal" aria-hidden="true">
     <div class="modal-card">
       <div class="modal-header">
