@@ -3,7 +3,6 @@
   width: 280px;
   background-color: #252526;
   color: #ccc;
-  overflow-y: auto;
   border-right: 1px solid #333;
 }
 
@@ -38,6 +37,7 @@
   color: #ccc;
   font-size: 12px;
 }
+
 #file-search:focus { outline: none; border-color: #4FC3F7; }
 
 /* Tree */

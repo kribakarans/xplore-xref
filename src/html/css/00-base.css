@@ -7,8 +7,6 @@ body {
   background-color: #1e1e1e;
 }
 
-#app { display: flex; height: 100vh; }
-
 /* Common clickable hover used in header */
 #sidebar-header h3.clickable { cursor: pointer; transition: color 0.2s ease; }
 #sidebar-header h3.clickable:hover { color: #4FC3F7; text-decoration: underline; }
