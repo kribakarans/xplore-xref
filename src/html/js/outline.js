@@ -1,6 +1,6 @@
 // outline.js — grouped outline + include/import detection
 import { symbolsByFile } from "./tags.js";
-import { escapeHtml, joinContinuedLines, unquote, splitMakeArgs, basename, dirname, normalizePath } from "./utils.js";
+import { escapeHtml, joinContinuedLines, unquote, splitMakeArgs, basename } from "./utils.js";
 import { statusCenter, toast } from "./status.js";
 import { navigateTo } from "./nav.js";
 import { getEditor, getActivePath, getActiveTab, blinkLine } from "./editor.js";
@@ -9,6 +9,7 @@ export function renderOutline(path) {
   const list = document.getElementById("outline-list");
   list.innerHTML = "";
   if (!path) { statusCenter("Outline: No file"); return; }
+
   const fileSyms = symbolsByFile.get(path) || [];
   const model = getEditor().getModel();
   const currentTab = getActiveTab();
@@ -17,39 +18,68 @@ export function renderOutline(path) {
   const macros = [], globals = [], classes = [], functions = [];
   for (const s of fileSyms) {
     const kind = (s.kind || "").toLowerCase();
+
     if (kind === "macro" || kind === "define" || kind === "preproc") { macros.push(s); continue; }
-    if (kind === "function" || kind === "method") { functions.push(s); continue; }
-    if (kind === "class" || kind === "struct" || kind === "union" || kind === "enum" || kind === "typedef" || kind === "interface") { classes.push(s); continue; }
+
+    // 🔹 Functions group: include definitions AND declarations (prototypes)
+    if (kind === "function" || kind === "method" || kind === "prototype") {
+      // Mark declarations so we can label them later
+      if (kind === "prototype" || (s.extra && /prototype/i.test(s.extra))) s._decl = true;
+      functions.push(s);
+      continue;
+    }
+
+    if (kind === "class" || kind === "struct" || kind === "union" || kind === "enum" || kind === "typedef" || kind === "interface") {
+      classes.push(s); continue;
+    }
+
     if (kind === "variable" || kind === "var") {
       const sk = (s.scopeKind || "").toLowerCase();
       if (!sk || (sk && sk !== "function" && sk !== "method")) { globals.push(s); continue; }
     }
   }
 
-  const filter = document.getElementById("outline-filter").value.trim().toLowerCase();
+  // --- Filter (applies to ALL sections) ---
+  const filter = (document.getElementById("outline-filter")?.value || "").trim().toLowerCase();
   const filterText = (txt) => String(txt || "").toLowerCase().includes(filter);
-  function maybeFilter(list, key = 'name') { if (!filter) return list; return list.filter(s => filterText(s[key])); }
-  const includesFiltered = !filter ? includes : includes.filter(inc => filterText(inc.name) || filterText(inc.kind) || filterText(inc.lang));
+  const maybeFilter = (arr, key = "name") => (!filter ? arr : arr.filter(s =>
+    filterText(s[key]) || filterText(s.kind) || filterText(s.scope) || filterText(s.language)));
+
+  const includesFiltered = !filter
+    ? includes
+    : includes.filter(inc => filterText(inc.name) || filterText(inc.kind) || filterText(inc.lang));
 
   const sections = [
-    { title: "File Included", icon: "codicon-symbol-file", items: includesFiltered.map(inc => ({ _type:"include", name:inc.name, line:inc.line, lang:inc.lang, kind:inc.kind })) },
-    { title: "Macros", icon: "codicon-symbol-misc", items: maybeFilter(macros) },
+    {
+      title: "File Included",
+      icon: "codicon-symbol-file",
+      items: includesFiltered.map(inc => ({ _type:"include", name:inc.name, line:inc.line, lang:inc.lang, kind:inc.kind }))
+    },
+    { title: "Macros",           icon: "codicon-symbol-misc",     items: maybeFilter(macros) },
     { title: "Global variables", icon: "codicon-symbol-variable", items: maybeFilter(globals) },
-    { title: "Classes", icon: "codicon-symbol-class", items: maybeFilter(classes) },
-    { title: "Functions", icon: "codicon-symbol-method", items: maybeFilter(functions) }
+    { title: "Classes",          icon: "codicon-symbol-class",    items: maybeFilter(classes) },
+    { title: "Functions",        icon: "codicon-symbol-method",   items: maybeFilter(functions) }
   ];
 
   let totalShown = 0;
+
   for (const sec of sections) {
+    if (!sec.items || sec.items.length === 0) continue; // hide empty sections
+
+    // Header
     const header = document.createElement("li");
     header.className = "outline-section";
     header.innerHTML = `<span class="codicon ${sec.icon}"></span><span class="section-title">${sec.title}</span>`;
-    list.appendChild(header);
-    if (!sec.items || sec.items.length === 0) continue;
+
+    // Group (items container)
+    const group = document.createElement("ul");
+    group.className = "outline-group";
 
     for (const sym of sec.items) {
       totalShown++;
-      const li = document.createElement("li"); li.className = "outline-item";
+      const li = document.createElement("li");
+      li.className = "outline-item";
+
       if (sym._type === "include") {
         const icon = (sym.lang === "python") ? "codicon-symbol-namespace"
                    : (sym.lang === "js/ts") ? "codicon-symbol-module"
@@ -69,33 +99,50 @@ export function renderOutline(path) {
           }
           if (getActivePath() !== path) {
             await navigateTo(path, sym.line, null, { record: true });
-          } else {
+          } else if (sym.line) {
             const ed = getEditor();
-            if (ed && sym.line) {
-              ed.revealLineInCenter(sym.line);
-              ed.setPosition({ lineNumber: sym.line, column: 1 });
-              ed.focus();
-              blinkLine(sym.line); // highlight same-file jump
-            }
+            ed.revealLineInCenter(sym.line);
+            ed.setPosition({ lineNumber: sym.line, column: 1 });
+            ed.focus();
+            blinkLine(sym.line);
           }
           toast(`No target found. Jumped to include/import`, 'warn');
           statusCenter(`Jumped to include/import line for ${sym.name}`);
         });
       } else {
-        li.innerHTML = `<span class="codicon codicon-symbol-property"></span><span class="label">${escapeHtml(sym.name)}</span>`;
+        // Choose icon based on kind; mark declarations
+        const k = (sym.kind || "").toLowerCase();
+        const isFuncLike = (k === "function" || k === "method" || k === "prototype");
+        const iconClass = isFuncLike ? "codicon-symbol-method" : "codicon-symbol-property";
+
+        let label = sym.name;
+        if (sym._decl) label += " (decl)";
+
+        li.innerHTML = `<span class="codicon ${iconClass}"></span><span class="label">${escapeHtml(label)}</span>`;
         li.title = `${sym.kind || 'symbol'}${sym.scope ? ' — ' + sym.scope : ''}`;
         li.addEventListener("click", async () => {
           statusCenter(`Outline jump: ${sym.name}`);
           await navigateTo(path, sym.line || null, sym.pattern || null, { record: true });
         });
       }
-      list.appendChild(li);
+      group.appendChild(li);
     }
+
+    list.appendChild(header);
+    list.appendChild(group);
   }
+
+  if (totalShown === 0) {
+    const empty = document.createElement("li");
+    empty.className = "outline-empty";
+    empty.textContent = filter ? `No symbols match "${filter}".` : "No symbols.";
+    list.appendChild(empty);
+  }
+
   statusCenter(`Outline updated (${totalShown} symbols${includes.length ? `, ${includes.length} includes/imports` : ''})`);
 }
 
-export function resolveIncludedTarget(name, currentFilePath) {
+export function resolveIncludedTarget(name/*, currentFilePath*/) {
   const all = Array.from(document.querySelectorAll("#file-tree li.file")).map(li => li.dataset?.path).filter(Boolean);
   const nameNorm = name.replace(/\\/g, '/');
   const bn = '/' + basename(nameNorm);
@@ -178,14 +225,18 @@ export function parseIncludesFromModel(model, filename) {
   return results;
 }
 
-// Helper to jump to line within current editor (used when include can't resolve)
-function goToLocation(path, line) {
-  const ed = getEditor();
-  if (!ed) return;
-  if (typeof line === "number" && line > 0) {
-    ed.revealLineInCenter(line);
-    ed.setPosition({ lineNumber: line, column: 1 });
-    ed.focus();
-    blinkLine(line);
-  }
+// Live-binding: re-render outline as the user types in the filter box
+function bindOutlineFilterListener() {
+  const el = document.getElementById("outline-filter");
+  if (!el || el.dataset.bound) return;
+  el.dataset.bound = "1";
+  el.addEventListener("input", () => {
+    const p = getActivePath();
+    if (p) renderOutline(p);
+  });
+}
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", bindOutlineFilterListener);
+} else {
+  bindOutlineFilterListener();
 }

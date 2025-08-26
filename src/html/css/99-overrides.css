@@ -1,13 +1,23 @@
 /* Small fixes & overrides kept last to win specificity/ordering */
 
-/* Disable hover effect on outline section headers */
-#outline-list .outline-section:hover { background: #2a2d2e !important; }
+/* Keep group headers always blue, even on hover/focus/active */
+#outline-list .outline-section:hover,
+#outline-list .outline-section:focus,
+#outline-list .outline-section:active {
+  background: #0b4f85 !important;
+  color: #fff !important;
+  cursor: default;
+}
 
 /* Ensure only outline rows get hover */
-#outline-list li:hover { background: inherit; }
+#outline-list li:hover {
+  background: inherit;
+}
 
 /* Keep item-only hover styling */
-#outline-list li.outline-item:hover { background: #3a3d3e; }
+#outline-list li.outline-item:hover {
+  background: #3a3d3e;
+}
 
 /* Jump highlight blink */
 .monaco-editor .xplore-line-blink {

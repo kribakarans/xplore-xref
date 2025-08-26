@@ -5,6 +5,11 @@ import { collectAllFiles, isSearchableFile } from "./fs.js";
 import { toast } from "./status.js";
 import { navigateTo } from "./nav.js";
 import { getEditor, getFullTree, getActivePath } from "./editor.js";
+import { setProgress } from "./progress.js";   // 🔹 NEW
+
+// deps
+import { getWordUnderCursor } from "./editor.js";
+import { escapeHtml } from "./utils.js";
 
 export async function findReferencesInFileAtCursor() {
   const model = getEditor().getModel();
@@ -29,6 +34,8 @@ export async function findReferencesInFileAtCursor() {
   }
 
   openRefsModal(`References in File: ${symbol}`);
+  setProgress("refs-progress", null);
+
   refsResults.innerHTML = "";
   if (results.length === 0) {
     const li = document.createElement("li"); li.className = "empty"; li.textContent = "No references found in this file."; refsResults.appendChild(li);
@@ -45,10 +52,6 @@ export async function findReferencesInFileAtCursor() {
   toast(`${results.length} references in file`, "info");
 }
 
-// deps
-import { getWordUnderCursor } from "./editor.js";
-import { escapeHtml } from "./utils.js";
-
 export async function findAllReferencesAtCursor() {
   const model = getEditor().getModel();
   const pos = getEditor().getPosition();
@@ -57,9 +60,12 @@ export async function findAllReferencesAtCursor() {
   if (!symbol) return;
 
   openRefsModal(`References: ${symbol}`);
+  setProgress("refs-progress", 0);
+
   const files = collectAllFiles(getFullTree()).filter(f => isSearchableFile(f.name, f.mimetype)).slice(0, 200);
   const needle = new RegExp(`\\b${escapeRegExp(symbol)}\\b`, "g");
 
+  let processed = 0;
   const tasks = await limitConcurrency(files.map(f => async () => {
     try {
       const res = await fetch(f.path);
@@ -77,7 +83,13 @@ export async function findAllReferencesAtCursor() {
       }
       return results;
     } catch { return []; }
+    finally {
+      processed++;
+      setProgress("refs-progress", Math.round((processed / files.length) * 100));
+    }
   }), 10);
+
+  setProgress("refs-progress", null);
 
   const found = tasks.flat().slice(0, 500);
   if (found.length === 0) {

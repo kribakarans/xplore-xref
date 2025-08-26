@@ -20,46 +20,72 @@
 
 #outline-filter {
   margin-left: 8px; flex: 1; max-width: 150px; padding: 4px 6px;
-  font-size: 12px; color: #ccc; background: #1e1e1e; border: 1px solid #444; border-radius: 3px;
+  font-size: 12px; color: #ccc;
+  background: #1e1e1e; border: 1px solid #444; border-radius: 3px;
 }
 #outline-filter:focus { outline: none; border-color: #4FC3F7; }
 
-#outline-list { list-style: none; margin: 0; padding: 6px; }
-#outline-list li {
-  display: flex; align-items: center; gap: 6px; padding: 4px 6px;
-  border-radius: 4px; cursor: pointer; color: #ccc;
+#outline-list {
+  list-style: none;
+  margin: 0;
+  padding-left: 3px;
+  padding-right: 5px;
 }
-#outline-list li .label { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#outline-list li .codicon { opacity: 0.9; }
 
-/* Group headers (VS Code-like bar) */
+/* --- Blue section headers (sharp corners, no extra gap) --- */
 #outline-list .outline-section {
-  background: #2a2d2e !important;
-  border: none !important;
-  border-top: 1px solid #3a3a3a !important;
-  border-radius: 0 !important;
-  margin: 0 !important;
-  padding: 6px 10px !important;
-  color: #ddd !important;
-  font-weight: 500 !important;
-  font-size: 12px !important;
-  letter-spacing: .5px !important;
-  text-transform: uppercase !important;
-  cursor: default !important;
-  user-select: none !important;
+  background: #0b4f85 !important;   /* dark blue */
+  color: #fff !important;
+  border: 1px solid #0f63a6 !important;
+  border-radius: 0;                  /* sharp */
+  margin: 8px 0 0 0;                 /* no bottom gap */
+  padding: 6px 10px;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  display: flex; align-items: center; gap: 8px;
+  user-select: none;
+  cursor: default;                   /* not clickable */
 }
-#outline-list .outline-section:first-child { border-top: none !important; }
+
+/* --- Group area (sharp corners, immediately under header) --- */
+#outline-list .outline-group {
+  list-style: none;
+  margin: 0 0 8px 0;                 /* flush under header */
+  padding: 4px 0;
+  border: 1px solid rgba(79, 195, 247, 0.25);
+  border-top: none;                  /* seamless join with header */
+  border-radius: 0;                  /* sharp */
+  background: #1b1e1f;
+}
 
 /* Rows */
 #outline-list li.outline-item {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 8px;
-  margin: 0 6px;
-  border-radius: 4px;
+  padding: 6px 10px;
+  margin: 0;                         /* no inner gaps */
   cursor: pointer;
   color: #ccc;
   font-size: 12px;
 }
-#outline-list li.outline-item:hover { background: #3a3d3e; }
+#outline-list li.outline-item:hover {
+  background: #3a3d3e;
+}
+
+#outline-list li .label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#outline-list li .codicon { opacity: 0.9; }
+
+/* Empty state */
+#outline-list .outline-empty {
+  color: #bdbdbd;
+  font-style: italic;
+  margin: 10px 8px;
+}

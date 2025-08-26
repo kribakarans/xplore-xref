@@ -5,6 +5,7 @@ import { statusCenter } from "./status.js";
 import { navigateTo } from "./nav.js";
 import { getActivePath } from "./editor.js";
 import { registerModal } from "./modal.js";
+import { setProgress } from "./progress.js";
 
 // Register with the unified modal manager
 const symbolModal = registerModal("symbol-modal", { closeOnOverlay: true });
@@ -19,6 +20,7 @@ export function openSymbolModal(tab) {
   setActiveSymbolTab(tab);
   queryEl.value = "";
   resultsEl.innerHTML = "";
+  setProgress("symbol-progress", null);   // hide on open
   // Focus after paint to avoid scroll jumps
   setTimeout(() => queryEl.focus(), 0);
   statusCenter(`Symbols: ${tab}`);
@@ -42,7 +44,7 @@ function setActiveSymbolTab(which) {
 }
 
 modalEl?.querySelectorAll(".modal-tabs button").forEach(btn => {
-  if (btn.id === "symbol-close") return; // skip close button
+  if (btn.id === "symbol-close") return;
   btn.addEventListener("click", () => {
     setActiveSymbolTab(btn.dataset.tab);
     statusCenter(`Symbols tab: ${btn.dataset.tab}`);
@@ -88,7 +90,13 @@ export function updateSymbolResults() {
   const active = getActivePath();
   if (scope === "file" && active && symbolsByFile.has(active)) list = symbolsByFile.get(active);
   else list = workspaceTags;
+
+  setProgress("symbol-progress", 20);  // show quick pulse
+
   const matches = fuzzyFilter(list, q, 200);
+
+  setProgress("symbol-progress", null); // hide once done
+
   resultsEl.innerHTML = "";
   if (matches.length === 0) {
     const empty = document.createElement("li");

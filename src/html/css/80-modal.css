@@ -1,12 +1,12 @@
-/* Symbol & References modals */
-#symbol-modal, #refs-modal {
+/* Symbol, References, Grep modals */
+#symbol-modal, #refs-modal, #grep-modal {
   position: fixed; inset: 0; display: none;
   align-items: flex-start; justify-content: center; padding-top: 10vh;
   background: rgba(0,0,0,0.55);
 }
-#symbol-modal[aria-hidden="false"], #refs-modal[aria-hidden="false"] { display: flex; }
+#symbol-modal[aria-hidden="false"], #refs-modal[aria-hidden="false"], #grep-modal[aria-hidden="false"] { display: flex; }
 
-#symbol-modal .modal-card, #refs-modal .modal-card {
+#symbol-modal .modal-card, #refs-modal .modal-card, #grep-modal .modal-card {
   width: min(800px, 94vw);
   background: #1c1c1c;
   color: #e8e8e8;
@@ -16,20 +16,20 @@
 }
 
 /* headers */
-#symbol-modal .modal-tabs, #refs-modal .modal-header {
+#symbol-modal .modal-tabs, #refs-modal .modal-header, #grep-modal .modal-header {
   display: flex; gap: 8px; padding: 10px;
   border-bottom: 1px solid #3a3a3a;
   background: #202020;
 }
-#refs-modal .modal-header { align-items: center; justify-content: space-between; }
-#refs-modal .modal-header #refs-title { font-weight: 600; color: #76d2ff; letter-spacing: .2px; }
+#refs-modal .modal-header, #grep-modal .modal-header { align-items: center; justify-content: space-between; }
+#refs-modal .modal-header #refs-title, #grep-modal .modal-header #grep-title { font-weight: 600; color: #76d2ff; letter-spacing: .2px; }
 
-/* close button — apply to BOTH modals */
-#symbol-modal .modal-close, #refs-modal .modal-close {
+/* close button — all modals */
+#symbol-modal .modal-close, #refs-modal .modal-close, #grep-modal .modal-close {
   background: transparent; color: #cfcfcf; border: none; font-size: 20px; cursor: pointer;
   margin-left: auto;
 }
-#symbol-modal .modal-close:hover, #refs-modal .modal-close:hover { color: #fff; }
+#symbol-modal .modal-close:hover, #refs-modal .modal-close:hover, #grep-modal .modal-close:hover { color: #fff; }
 
 #symbol-modal .modal-tabs button {
   background: #2b2b2b; color: #cfcfcf; border: 1px solid #3a3a3a;
@@ -39,20 +39,39 @@
   background: #0b4f85; color: #fff; border-color: #0f63a6;
 }
 
-#symbol-query, #outline-filter {
+/* Progress bar (shared) */
+.modal-progress {
+  width: calc(100% - 20px);
+  margin: 6px 10px;
+  height: 4px;
+  background: #333;
+  border-radius: 2px;
+  overflow: hidden;
+  display: none;
+}
+.modal-progress .bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #4FC3F7, #007acc);
+  transition: width 0.25s ease;
+}
+
+/* Inputs */
+#symbol-query, #outline-filter, #grep-query {
   background: #191919; color: #e6e6e6; border: 1px solid #454545;
 }
-#symbol-query {
+#symbol-query, #grep-query {
   width: calc(100% - 20px); margin: 10px; padding: 8px 10px;
   font-size: 14px; border-radius: 6px;
 }
-#symbol-query::placeholder { color: #9aa0a6; }
+#symbol-query::placeholder, #grep-query::placeholder { color: #9aa0a6; }
 
-#symbol-results, #refs-results {
+/* Results lists */
+#symbol-results, #refs-results, #grep-results {
   list-style: none; margin: 0; padding: 6px 8px 10px 8px;
   max-height: 60vh; overflow: auto;
 }
-#symbol-results li, #refs-results li {
+#symbol-results li, #refs-results li, #grep-results li {
   display: grid;
   grid-template-columns: 22px 1fr auto;
   align-items: center;
@@ -61,21 +80,21 @@
   color: #e8e8e8;
   line-height: 1.3;
 }
-#refs-results li { grid-template-columns: 22px 1fr 1fr; }
-#symbol-results li:hover, #refs-results li:hover { background: #2b2b2b; }
+#refs-results li, #grep-results li { grid-template-columns: 22px 1fr 1fr; }
+#symbol-results li:hover, #refs-results li:hover, #grep-results li:hover { background: #2b2b2b; }
 
-#symbol-results .name, #refs-results .name {
+#symbol-results .name, #refs-results .name, #grep-results .name {
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   font-weight: 400; color: #f5f5f5;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 }
-#symbol-results .dim, #refs-results .dim {
+#symbol-results .dim, #refs-results .dim, #grep-results .dim {
   color: #d2d2d2;
   font-size: 12.5px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
   opacity: 0.95;
 }
-#symbol-results li.empty, #refs-results li.empty {
+#symbol-results li.empty, #refs-results li.empty, #grep-results li.empty {
   color: #bdbdbd; font-style: italic; cursor: default;
 }

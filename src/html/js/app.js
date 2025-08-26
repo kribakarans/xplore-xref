@@ -8,6 +8,7 @@ import { navigateTo, goBack, goForward, updateNavButtons } from "./nav.js";
 import { openSymbolModal } from "./symbols.js";
 import { applyPreviewVisibility, updatePreviewButtonVisibility, renderPreview, setPreviewOn, getPreviewOn } from "./preview.js";
 import { closeAllModals } from "./modal.js";
+import { openGrepModal } from "./grep.js";
 
 function findReadme(tree) {
   const readmeNames = ['README.md', 'INDEX.md'];
@@ -93,6 +94,13 @@ window.addEventListener("load", async () => {
   if (wsBtn) wsBtn.addEventListener("click", () => { openSymbolModal('workspace'); toast("Workspace Symbols"); });
   if (fileBtn) fileBtn.addEventListener("click", () => { openSymbolModal('file'); toast("File Symbols"); });
 
+  // Grep button
+  document.getElementById("workspace-grep")?.addEventListener("click", () => {
+    openGrepModal();
+    toast("Grep in Workspace");
+  });
+
+  // Hotkeys
   window.addEventListener('keydown', (e) => {
     const ctrl = e.ctrlKey || e.metaKey;
     if (ctrl && e.key.toLowerCase() === 't') {
@@ -100,6 +108,9 @@ window.addEventListener("load", async () => {
     }
     else if (ctrl && e.shiftKey && e.key.toLowerCase() === 'o') {
       e.preventDefault(); openSymbolModal('file'); toast("File Symbols (Ctrl+Shift+O)");
+    }
+    else if (ctrl && e.shiftKey && e.key.toLowerCase() === 'f') {
+      e.preventDefault(); openGrepModal(); toast("Grep in Workspace (Ctrl+Shift+F)");
     }
     else if (e.key === 'Escape') {
       closeAllModals();
