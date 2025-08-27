@@ -6,6 +6,9 @@ import { updatePreviewButtonVisibility, applyPreviewVisibility, renderPreview, g
 import { openSymbolModal } from "./symbols.js";
 import { findReferencesInFileAtCursor, findAllReferencesAtCursor } from "./refs.js";
 import { navigateTo } from "./nav.js";
+import { registerMakefileLanguage } from "./language/makefile.js";
+import { registerVimLanguage } from "./language/vim.js";
+
 
 // --- blink state
 let __blinkDecorations = [];
@@ -147,6 +150,14 @@ export function setActiveTab(path, location = null) {
 export function createMonacoEditor() {
   require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
   require(["vs/editor/editor.main"], function () {
+
+    // Register Makefile language before creating any models
+    try { registerMakefileLanguage(monaco); console.log("INFO | makefile language wired"); }
+    catch (e) { console.log("ERROR | makefile language registration failed", e); }
+
+    try { registerVimLanguage(monaco); console.log("INFO | vim language wired"); }
+    catch (e) { console.log("ERROR | vim language registration failed", e); }
+
     editor = monaco.editor.create(document.getElementById("editor"), {
       value: "", language: "plaintext", theme: "vs-dark",
       automaticLayout: true, readOnly: true, minimap: { enabled: true }, wordWrap: "off"
