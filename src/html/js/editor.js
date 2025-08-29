@@ -19,7 +19,7 @@ let activePath = null;
 let fullTree = null;
 
 // limit of open tabs
-const MAX_TABS = 10;
+const MAX_TABS = 7;
 
 // context key to control symbol menu visibility
 let hasSymbolCtx = null;
