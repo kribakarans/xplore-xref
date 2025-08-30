@@ -3,16 +3,19 @@ import { navigateTo } from "./nav.js";
 
 let selectedItem = null;
 
+// Helper: detect mobile view
+function isMobileView() {
+  return window.innerWidth <= 768;
+}
+
 export function renderTree(data, container, autoExpandParents = false) {
   container.innerHTML = "";
   data.forEach(item => {
     const li = document.createElement("li");
-    li.classList.add(item.type);
+    li.classList.add(item.type === "dir" ? "folder" : "file");
     li.dataset.path = item.path;
 
     if (item.type === "dir") {
-      li.classList.add("folder");
-
       const arrow = document.createElement("span");
       arrow.classList.add("arrow");
 
@@ -52,12 +55,23 @@ export function renderTree(data, container, autoExpandParents = false) {
       nameSpan.classList.add("name");
       nameSpan.textContent = item.name;
       li.appendChild(nameSpan);
+
       li.addEventListener("click", (e) => {
         e.stopPropagation();
         selectItem(li);
-        navigateTo(item.path, null, null, { record: true });
+
+        if (isMobileView()) {
+          // 🚀 On mobile → open directly in viewport.html (new tab)
+          const url = new URL("viewport.html", location.href);
+          url.searchParams.set("path", item.path);
+          window.open(url.toString(), "_blank", "noopener");
+        } else {
+          // Desktop → navigate in-app editor
+          navigateTo(item.path, null, null, { record: true });
+        }
       });
     }
+
     container.appendChild(li);
   });
 

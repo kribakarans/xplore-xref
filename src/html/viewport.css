@@ -1,54 +1,121 @@
-/* viewport.css — lightweight imports + viewport overrides */
+/* viewport.css — viewport-only layout overrides */
 
-/* === Base imports for viewport === */
-@import url("./00-base.css");
-@import url("./10-layout.css");
-@import url("./30-tabs.css");
-@import url("./40-toolbar.css");
-@import url("./50-preview.css");
-@import url("./60-outline.css");
-@import url("./70-statusbar.css");
-@import url("./80-modal.css");
-@import url("./90-toast.css");
-@import url("./95-scrollbars.css");
-
-/* === Viewport-only overrides === */
-
-/* Layout: editor left (expands), outline right (fixed width) */
+/* Base grid: editor + gutter + outline */
 #app {
   display: grid;
-  grid-template-columns: 1fr auto; /* editor/preview + outline */
-  height: 100%;
-}
-
-#main {
-  width: 100% !important;
+  grid-template-columns: 1fr var(--gutter-hit, 8px) var(--right-pane, 300px);
+  grid-template-rows: 1fr auto; /* main + statusbar */
+  height: 100vh;
   margin: 0;
 }
 
-#content,
-#editor {
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-  width: 100% !important;   /* editor stretches full width */
+/* Main editor container */
+#viewport-main {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
 }
 
-/* Outline fixed width */
+/* Content inside editor (editor + preview) */
+#viewport-main #content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+#viewport-main #editor,
+#viewport-main #preview {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Right gutter (resizable) */
+.gutter-right {
+  grid-column: 2;
+  grid-row: 1;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 10;
+}
+.gutter-right.is-dragging {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Outline panel */
 #right {
-  width: 280px;
-  min-width: 240px;
-  max-width: 400px;
+  grid-column: 3;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: var(--min-right, 200px);
+  max-width: var(--max-right, 600px);
+  border-left: 1px solid #333;
 }
 
-/* ✅ Force Monaco content to top-left */
-.monaco-editor,
-.monaco-editor .overflow-guard {
-  display: block !important;
-  align-items: flex-start !important;
-  justify-content: flex-start !important;
-  text-align: left !important;
+/* Status bar */
+#statusbar {
+  grid-column: 1 / span 3;
+  grid-row: 2;
 }
 
-.monaco-editor .view-lines {
-  margin-left: 0 !important;
+/* === Mobile view: stack outline below editor === */
+@media (max-width: 768px) {
+  #app {
+    grid-template-columns: 1fr;          /* single column */
+    grid-template-rows: 1fr auto auto;   /* editor | outline | statusbar */
+  }
+
+  #viewport-main {
+    grid-row: 1;
+    grid-column: 1 / -1;                 /* editor spans full width */
+  }
+
+  .gutter-right { display: none; }
+
+  #right {
+    grid-row: 2;
+    max-width: 100%;
+    min-width: 100%;
+    border-left: none;
+    border-top: 1px solid #333;
+  }
+
+  #statusbar { grid-row: 3; }
+}
+
+/* === Outline auto-hide (no symbols) === */
+body.outline-hidden-auto #right,
+body.outline-hidden-auto .gutter-right {
+  display: none !important;
+}
+body.outline-hidden-auto #app {
+  grid-template-columns: 1fr !important;
+}
+body.outline-hidden-auto #viewport-main {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* === Outline user-hide (manual toggle) === */
+body.outline-hidden-user #right,
+body.outline-hidden-user .gutter-right {
+  display: none !important;
+}
+body.outline-hidden-user #app {
+  grid-template-columns: 1fr !important;
+}
+body.outline-hidden-user #viewport-main {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* === Hide toggle button when no symbols === */
+#editor-tools #toggle-outline.toggle-hidden {
+  display: none !important;
 }

@@ -8,6 +8,7 @@
 
   <!-- Styles -->
   <link rel="stylesheet" href="__xplore/styles.css" />
+  <link rel="stylesheet" href="__xplore/viewport.css" /> <!-- ✅ viewport-only overrides -->
 
   <!-- Codicons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@vscode/codicons/dist/codicon.css">
@@ -19,101 +20,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/github-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/12.3.2/markdown-it.min.js"></script>
-
-  <!-- ✅ Viewport-only layout overrides -->
-  <style>
-    #app {
-      display: grid;
-      grid-template-columns: 1fr var(--gutter-hit, 8px) var(--right-pane, 300px);
-      grid-template-rows: 1fr auto; /* main + statusbar */
-      height: 100vh;
-      margin: 0;
-    }
-
-    #viewport-main {
-      grid-column: 1;
-      grid-row: 1;
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-      min-height: 0;
-    }
-
-    #viewport-main #content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
-
-    #viewport-main #editor,
-    #viewport-main #preview {
-      flex: 1;
-      min-height: 0;
-    }
-
-    /* Right gutter (resizable) */
-    .gutter-right {
-      grid-column: 2;
-      grid-row: 1;
-      cursor: col-resize;
-      background: transparent;
-      z-index: 10;
-    }
-
-    .gutter-right.is-dragging {
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    #right {
-      grid-column: 3;
-      grid-row: 1;
-      display: flex;
-      flex-direction: column;
-      min-width: var(--min-right, 200px);
-      max-width: var(--max-right, 600px);
-      border-left: 1px solid #333;
-    }
-
-    #statusbar {
-      grid-column: 1 / span 3;
-      grid-row: 2;
-    }
-
-    /* ✅ Mobile view: stack outline below editor */
-    @media (max-width: 768px) {
-      #app {
-        grid-template-columns: 1fr;       /* single column */
-        grid-template-rows: 1fr auto auto; /* editor | outline | statusbar */
-      }
-
-      #viewport-main {
-        grid-column: 1;
-        grid-row: 1;
-      }
-
-      .gutter-right {
-        display: none; /* hide gutter on mobile */
-      }
-
-      #right {
-        grid-column: 1;
-        grid-row: 2;    /* move outline below editor */
-        max-width: 100%;
-        min-width: 100%;
-        border-left: none;
-        border-top: 1px solid #333;
-      }
-
-      #statusbar {
-        grid-column: 1;
-        grid-row: 3;
-      }
-    }
-  </style>
 </head>
 
-<body class="vscode-theme-dark">
+<!-- ✅ Added viewport-app class -->
+<body class="vscode-theme-dark viewport-app">
   <div id="app" role="application" aria-label="Viewport Shell">
 
     <!-- ✅ Editor/Preview area -->

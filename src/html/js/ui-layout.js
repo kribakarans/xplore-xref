@@ -31,6 +31,11 @@ function restoreWidth(side) {
   return v ? Number(v) : null;
 }
 
+/* ---- Helpers ---- */
+function isMobile() {
+  return window.innerWidth <= 768;
+}
+
 /* ---- Outline toggle (default visible) ---- */
 function getOutlineHidden() {
   const v = localStorage.getItem(STORAGE.outlineHidden);
@@ -52,7 +57,7 @@ function setOutlineHidden(hidden) {
   log.info(`Outline panel ${hidden ? "hidden" : "shown"}`);
 }
 
-/* ---- Align gutters to content row and seams ---- */
+/* ---- Align gutters ---- */
 function positionGutters() {
   const grid    = document.getElementById("app");
   const leftEl  = document.getElementById("sidebar");
@@ -69,7 +74,6 @@ function positionGutters() {
   const mainRect = mainEl.getBoundingClientRect();
   const hit      = pxToNum(readVar("--gutter-hit")) || 8;
 
-  // vertical coverage = main area height; start at main top
   const top = mainRect.top - gridRect.top;
   const height = mainRect.height;
 
@@ -81,12 +85,10 @@ function positionGutters() {
     const leftSeamX = leftRect.right - gridRect.left;
     gLeft.style.left = `calc(${leftSeamX}px - ${hit/2}px)`;
   } else {
-    // No left sidebar in viewport → hide left gutter
     gLeft.style.display = "none";
   }
 
   if (gRight) {
-    // Hide right gutter if outline hidden
     const outlineHidden = document.body.classList.contains("outline-hidden");
     if (outlineHidden || !rightEl) {
       gRight.style.display = "none";
@@ -101,16 +103,27 @@ function positionGutters() {
   }
 }
 
+/* ---- Monaco relayout ---- */
 function relayoutEditorSoon() {
+  const ed = getEditor && getEditor();
+  if (!ed) return;
+
   requestAnimationFrame(() => {
-    try {
-      const ed = getEditor && getEditor();
-      if (ed && ed.layout) ed.layout();
-      log.debug("Monaco layout refreshed");
-    } catch (e) {
-      log.warn(`Monaco relayout skipped: ${e?.message || e}`);
-    }
+    try { ed.layout(); } catch {}
+    log.debug("Monaco layout refreshed (pass 1)");
   });
+
+  const app = document.getElementById("app");
+  if (app) {
+    const ro = new ResizeObserver(() => {
+      try { ed.layout(); } catch (e) {
+        log.warn(`Monaco relayout failed in ResizeObserver: ${e?.message || e}`);
+      }
+      log.debug("Monaco layout refreshed (pass 2 via ResizeObserver)");
+      ro.disconnect();
+    });
+    ro.observe(app);
+  }
 }
 
 /* ---- Drag-to-resize ---- */
@@ -130,6 +143,7 @@ function setupGutter(gutterEl, side) {
     px = clamp(px, minPx(), maxPx());
     writeVar(isLeft ? "--left-pane" : "--right-pane", `${px}px`);
     positionGutters();
+    relayoutEditorSoon();
   };
 
   const onPointerMove = (e) => {
@@ -172,7 +186,6 @@ function setupGutter(gutterEl, side) {
     relayoutEditorSoon();
   });
 
-  // Double-click reset
   gutterEl.addEventListener("dblclick", () => {
     const reset = isLeft ? 240 : 280;
     writeVar(isLeft ? "--left-pane" : "--right-pane", `${reset}px`);
@@ -184,10 +197,21 @@ function setupGutter(gutterEl, side) {
 
 /* ---- Init ---- */
 function applyInitialWidths() {
+  if (isMobile()) {
+    log.info("Mobile detected: skipping persisted pane widths.");
+    return;
+  }
   const l = restoreWidth("left");
   const r = restoreWidth("right");
+
   if (Number.isFinite(l)) writeVar("--left-pane", `${l}px`);
-  if (Number.isFinite(r)) writeVar("--right-pane", `${r}px`);
+
+  const outlineHidden = getOutlineHidden();
+  if (!outlineHidden && Number.isFinite(r)) {
+    writeVar("--right-pane", `${r}px`);
+  } else {
+    log.info("Outline hidden: ignoring persisted right pane width.");
+  }
 }
 
 function init() {
@@ -200,19 +224,16 @@ function init() {
     setupGutter(document.querySelector(".gutter-left"), "left");
     setupGutter(document.querySelector(".gutter-right"), "right");
 
-    // Keep gutters aligned on resize/layout changes
     const ro = new ResizeObserver(positionGutters);
     ro.observe(document.getElementById("app"));
     window.addEventListener("resize", positionGutters);
 
-    // Toggle button
     const btn = document.getElementById("toggle-outline");
     if (btn) btn.addEventListener("click", () => {
       const hidden = document.body.classList.contains("outline-hidden");
       setOutlineHidden(!hidden);
     });
 
-    // Ensure Monaco gets a layout pass after grid settles
     requestAnimationFrame(relayoutEditorSoon);
 
     log.info("Grid layout ready (resizable side panels + outline toggle).");

@@ -43,6 +43,22 @@ async function loadTagsForViewport() {
   }
 }
 
+// ✅ Refresh outline and auto-hide panel + toggle button if no symbols
+function refreshOutline(path) {
+  renderOutline(path);
+  const outlineList = document.getElementById("outline-list");
+  const hasSymbols = outlineList && outlineList.children.length > 0;
+  const toggleBtn = document.getElementById("toggle-outline");
+
+  if (hasSymbols) {
+    document.body.classList.remove("outline-hidden-auto");
+    toggleBtn?.classList.remove("toggle-hidden");
+  } else {
+    document.body.classList.add("outline-hidden-auto");
+    toggleBtn?.classList.add("toggle-hidden");
+  }
+}
+
 // Get query parameters
 function getQueryParam(key) {
   return new URLSearchParams(location.search).get(key);
@@ -76,8 +92,8 @@ window.addEventListener("load", async () => {
     setActiveTab(file.path);
     monaco.editor.setModelLanguage(ed.getModel(), lang);
 
-    // ✅ Stage 3: render outline with workspace + file symbols
-    renderOutline(file.path);
+    // ✅ Stage 3: render outline and auto-hide if empty
+    refreshOutline(file.path);
 
     if (line > 0) {
       ed.revealLineInCenter(line);
@@ -146,10 +162,10 @@ window.addEventListener("load", async () => {
     toast("File Symbols");
   });
 
-  // Outline toggle
+  // Outline toggle (manual override)
   document.getElementById("toggle-outline")?.addEventListener("click", () => {
-    document.body.classList.toggle("outline-hidden");
-    const hidden = document.body.classList.contains("outline-hidden");
+    document.body.classList.toggle("outline-hidden-user");
+    const hidden = document.body.classList.contains("outline-hidden-user");
     document.getElementById("toggle-outline")?.setAttribute("aria-pressed", String(!hidden));
     toast(`Outline ${hidden ? "hidden" : "shown"}`);
   });

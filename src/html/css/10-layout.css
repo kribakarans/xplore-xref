@@ -1,6 +1,8 @@
-/* Desktop grid layout with adjustable left & right panels.
+/* 10-layout.css
+   Desktop grid layout with adjustable left & right panels.
    Left: #sidebar, Center: #main, Right: #right, Footer: #statusbar
-   Outline stays in #right; all editor widgets live in #main. */
+   Outline stays in #right; all editor widgets live in #main.
+*/
 
 :root {
   --left-pane: 240px;
@@ -95,6 +97,9 @@
   flex: 1 1 auto;
   min-height: 0; /* critical so it can grow within grid/flex */
   width: 100%;
+  height: 100%;
+  box-sizing: border-box; /* ✅ ensures resize respects container */
+  overflow: hidden;       /* ✅ prevent ghost overflow */
 }
 
 #preview { display: none; } /* JS controls preview visibility */
@@ -129,6 +134,3 @@
 .gutter:hover::before, .gutter.is-dragging::before, .gutter:focus-visible::before { background: var(--ruler-color); }
 .gutter-left  { left: 0; }
 .gutter-right { right: 0; }
-
-/* Outline toggle (desktop) */
-body.outline-hidden #right { display: none; }

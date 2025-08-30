@@ -1,4 +1,4 @@
-// app-boot.js — entrypoint
+// app.js — entrypoint
 import { createMonacoEditor, getEditor, setFullTree, getActiveTab } from "./editor.js";
 import { renderTree, searchTree } from "./tree.js";
 import { loadFullTree } from "./fs.js";
@@ -10,6 +10,12 @@ import { applyPreviewVisibility, updatePreviewButtonVisibility, renderPreview, s
 import { closeAllModals } from "./modal.js";
 import { openGrepModal } from "./grep.js";
 
+// Detect mobile view (simple width check)
+function isMobileView() {
+  return window.innerWidth <= 768;
+}
+
+// Find README-like file
 function findReadme(tree) {
   const readmeNames = ["README.md", "INDEX.md"];
   function search(nodes) {
@@ -25,11 +31,12 @@ function findReadme(tree) {
   return search(tree);
 }
 
-createMonacoEditor();
+// Only initialize Monaco on non-mobile
+if (!isMobileView()) {
+  createMonacoEditor();
+}
 
-// Wait a tick for Monaco to be ready before wiring everything else
 window.addEventListener("load", async () => {
-  const ed = getEditor();
   statusCenter("Loading tree…");
   const fullTree = await loadFullTree();
   setFullTree(fullTree);
@@ -38,8 +45,11 @@ window.addEventListener("load", async () => {
 
   await loadWorkspaceTags();
 
-  const readme = findReadme(fullTree);
-  if (readme) await navigateTo(readme.path, null, null, { record: false });
+  // Auto-open README only on desktop (mobile uses viewport)
+  if (!isMobileView()) {
+    const readme = findReadme(fullTree);
+    if (readme) await navigateTo(readme.path, null, null, { record: false });
+  }
 
   const searchToggle = document.getElementById("search-toggle");
   const searchInput = document.getElementById("file-search");
@@ -68,6 +78,16 @@ window.addEventListener("load", async () => {
     renderTree(filtered, document.getElementById("file-tree"), true);
     statusCenter(`File search: "${query}"`);
   });
+
+  // ─────────── Mobile-only mode ───────────
+  if (isMobileView()) {
+    statusCenter("Mobile mode: editor disabled, use viewport");
+    updateNavButtons();
+    return;
+  }
+
+  // ─────────── Desktop-only Editor Features ───────────
+  const ed = getEditor();
 
   document.getElementById("editor-minimap")?.addEventListener("click", () => {
     const current = ed.getOption(monaco.editor.EditorOption.minimap).enabled;
@@ -122,13 +142,13 @@ window.addEventListener("load", async () => {
     }
   });
 
-  // Symbols: keep only File Symbols (Workspace handled via modal toggle)
+  // Symbols
   document.getElementById("file-symbols")?.addEventListener("click", () => {
     openSymbolModal("file");
     toast("File Symbols");
   });
 
-  // Grep button
+  // Grep
   document.getElementById("workspace-grep")?.addEventListener("click", () => {
     openGrepModal();
     toast("Grep in Workspace");
@@ -138,7 +158,6 @@ window.addEventListener("load", async () => {
   window.addEventListener("keydown", (e) => {
     const ctrl = e.ctrlKey || e.metaKey;
     if (ctrl && e.key.toLowerCase() === "t") {
-      // Open Symbols modal defaulting to Workspace scope (toggle can switch to File)
       e.preventDefault();
       openSymbolModal("workspace");
       toast("Workspace Symbols (Ctrl+T)");
