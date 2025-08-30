@@ -64,12 +64,18 @@ function getQueryParam(key) {
   return new URLSearchParams(location.search).get(key);
 }
 
+function isMobile() {
+  return window.innerWidth <= 768;
+}
+
 window.addEventListener("load", async () => {
   const ed = await createMonacoEditor();
 
-  // ✅ Disable minimap by default on mobile
-  if (window.innerWidth <= 768) {
-    ed.updateOptions({ minimap: { enabled: false } });
+  // ✅ Apply mobile profile
+  if (isMobile()) {
+    ed.updateOptions({ minimap: { enabled: false }, wordWrap: "on" });
+    console.log("INFO | Mobile viewport: minimap OFF, word wrap ON, soft keyboard disabled");
+    statusCenter("Mobile mode: minimap OFF, wrap ON, read-only");
   }
 
   const path = getQueryParam("path");

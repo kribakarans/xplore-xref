@@ -1,6 +1,6 @@
 // editor.js — Monaco editor + tabs
 import { statusCenter, updateCursorStatus, setFileStatus, toast } from "./status.js";
-import { detectLanguageByFilename, getLanguageFromExt } from "./lang.js";
+import { detectLanguageByFilename, getLanguageFromExt, rankBySourcePref } from "./lang.js";
 import { renderOutline } from "./outline.js";
 import { updatePreviewButtonVisibility, applyPreviewVisibility, renderPreview, getPreviewOn, setPreviewOn } from "./preview.js";
 import { openSymbolModal } from "./symbols.js";
@@ -8,10 +8,10 @@ import { findReferencesInFileAtCursor, findAllReferencesAtCursor } from "./refs.
 import { navigateTo } from "./nav.js";
 import { registerMakefileLanguage } from "./language/makefile.js";
 import { registerVimLanguage } from "./language/vim.js";
+import { workspaceTags, symbolsByFile } from "./tags.js";
 
 // --- blink state
 let __blinkDecorations = [];
-
 let editor;
 let openTabs = [];
 let activePath = null;
@@ -19,8 +19,6 @@ let fullTree = null;
 
 // limit of open tabs
 const MAX_TABS = 7;
-
-// context key to control symbol menu visibility
 let hasSymbolCtx = null;
 
 export function setFullTree(tree){ fullTree = tree; }
@@ -29,7 +27,12 @@ export function getEditor(){ return editor; }
 export function getActivePath(){ return activePath; }
 export function getActiveTab(){ return openTabs.find(t => t.path === activePath) || null; }
 
-// 🔹 Exported helper to blink a line in the active editor
+// 🔹 Mobile check
+function isMobile() {
+  return window.innerWidth <= 768;
+}
+
+// 🔹 Blink highlight
 export function blinkLine(lineNumber) {
   if (!editor || !lineNumber || lineNumber < 1) return;
   try {
@@ -46,17 +49,14 @@ export function blinkLine(lineNumber) {
   } catch {}
 }
 
-// Keep the active tab visible within the tab tray
+// Keep active tab visible
 function scrollActiveTabIntoView(tabEl) {
   const bar = document.getElementById("tabs");
   if (!bar || !tabEl) return;
   const br = bar.getBoundingClientRect();
   const er = tabEl.getBoundingClientRect();
-  if (er.left < br.left) {
-    bar.scrollLeft += er.left - br.left - 16;
-  } else if (er.right > br.right) {
-    bar.scrollLeft += er.right - br.right + 16;
-  }
+  if (er.left < br.left) bar.scrollLeft += er.left - br.left - 16;
+  else if (er.right > br.right) bar.scrollLeft += er.right - br.right + 16;
 }
 
 function enforceTabLimit() {
@@ -73,7 +73,6 @@ export function openTab(file, location) {
   if (existing) { setActiveTab(existing.path, location || null); toast(`Activated: ${file.path}`); return; }
 
   enforceTabLimit();
-
   const tabEl = document.createElement("div");
   tabEl.className = "tab";
   tabEl.textContent = file.name;
@@ -89,7 +88,7 @@ export function openTab(file, location) {
 
   openTabs.push({ path: file.path, name: file.name, content: file.content, tabEl });
   setActiveTab(file.path, location || null);
-  scrollActiveTabIntoView(tabEl);   // keep it visible
+  scrollActiveTabIntoView(tabEl);
   toast(`Opened: ${file.path}`);
 }
 
@@ -103,7 +102,7 @@ export function closeTab(path) {
     else if (openTabs.length === 0) {
       editor.setValue(""); activePath = null; renderOutline(null); setFileStatus(null, null);
       setPreviewOn(false); applyPreviewVisibility();
-      renderBreadcrumbs("");  // clear
+      renderBreadcrumbs("");
     }
   }
 }
@@ -137,37 +136,44 @@ export function setActiveTab(path, location = null) {
     if (getPreviewOn()) renderPreview().catch(()=>{});
   }
 
-  updateSymbolContext();      // menu visibility
-  renderBreadcrumbs(path);    // breadcrumbs
-
-  // ensure the active tab is visible in the tray
+  updateSymbolContext();
+  renderBreadcrumbs(path);
   scrollActiveTabIntoView(activeFile.tabEl);
 
   if (location) setTimeout(() => goToLocation(path, location.line, location.pattern), 0);
 }
 
-/* ---------- ✅ Modified to return a Promise (async load) ---------- */
+/* ---------- ✅ Modified: disable keyboard + minimap off + wrap on mobile ---------- */
 export function createMonacoEditor() {
   return new Promise((resolve) => {
     require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
     require(["vs/editor/editor.main"], function () {
-
-      // Register Makefile language before creating any models
       try { registerMakefileLanguage(monaco); console.log("INFO | makefile language wired"); }
       catch (e) { console.log("ERROR | makefile language registration failed", e); }
-
       try { registerVimLanguage(monaco); console.log("INFO | vim language wired"); }
       catch (e) { console.log("ERROR | vim language registration failed", e); }
 
-      editor = monaco.editor.create(document.getElementById("editor"), {
-        value: "", language: "plaintext", theme: "vs-dark",
-        automaticLayout: true, readOnly: true, minimap: { enabled: true }, wordWrap: "off"
-      });
+      const opts = {
+        value: "",
+        language: "plaintext",
+        theme: "vs-dark",
+        automaticLayout: true,
+        readOnly: true,
+        minimap: { enabled: true },
+        wordWrap: "off"
+      };
 
-      // context key to control menu visibility
+      if (isMobile()) {
+        opts.domReadOnly = true;       // prevent mobile keyboard
+        opts.minimap.enabled = false;  // no minimap on mobile
+        opts.wordWrap = "on";          // wrap lines on mobile
+        console.log("INFO | Mobile editor: domReadOnly, wrap=on, minimap off");
+      }
+
+      editor = monaco.editor.create(document.getElementById("editor"), opts);
+
       hasSymbolCtx = editor.createContextKey("xplore.hasSymbol", false);
       updateSymbolContext();
-
       addContextMenuActions();
 
       editor.onDidChangeCursorPosition(() => {
@@ -176,16 +182,12 @@ export function createMonacoEditor() {
       });
       editor.onDidLayoutChange(() => updateCursorStatus(editor));
 
-      // 🔗 Permalink button (copies viewport.html?path=…&line=…)
       wirePermalinkButton();
-
-      // ⌃/⌘+Click → open viewport.html
       wireCtrlClickDelegates();
 
       updateCursorStatus(editor);
       statusCenter("Editor ready");
-
-      resolve(editor);   // ✅ resolved here
+      resolve(editor);
     });
   });
 }
@@ -240,7 +242,6 @@ function renderBreadcrumbs(path) {
   parts.forEach((seg, idx) => {
     accum += (idx ? "/" : "") + seg;
     const isLeaf = idx === parts.length - 1;
-
     const crumb = document.createElement("span");
     crumb.className = "crumb" + (isLeaf ? " leaf" : " clickable");
     crumb.textContent = seg;
@@ -289,7 +290,7 @@ function updateSymbolContext() {
   } catch {}
 }
 
-/* ===== Context menu: cscope-like minimal set ===== */
+/* ===== Context menu: cscope-like ===== */
 export function addContextMenuActions() {
   editor.addAction({
     id: "ctx-goto-definition",
@@ -329,10 +330,6 @@ export function addContextMenuActions() {
     run: async () => { await findAllReferencesAtCursor(); }
   });
 }
-
-// Definition/Declaration helpers
-import { workspaceTags, symbolsByFile } from "./tags.js";
-import { rankBySourcePref } from "./lang.js";
 
 async function gotoDefinitionAtCursor() {
   const symbol = getWordUnderCursor(); 
