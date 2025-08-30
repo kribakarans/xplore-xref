@@ -67,6 +67,11 @@ function getQueryParam(key) {
 window.addEventListener("load", async () => {
   const ed = await createMonacoEditor();
 
+  // ✅ Disable minimap by default on mobile
+  if (window.innerWidth <= 768) {
+    ed.updateOptions({ minimap: { enabled: false } });
+  }
+
   const path = getQueryParam("path");
   const line = Number(getQueryParam("line") || 0);
 

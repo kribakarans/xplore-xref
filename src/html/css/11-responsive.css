@@ -5,35 +5,6 @@
    - Mobile: collapse into tree-only view
 */
 
-/* === Outline toggle (desktop & viewport) === */
-
-/* Hide right panel and gutter when outline is hidden */
-body.outline-hidden #right,
-body.outline-hidden .gutter-right {
-  display: none !important;
-}
-
-/* Expand grid to fill remaining space */
-body.outline-hidden #app {
-  grid-template-columns:
-    minmax(var(--min-left), var(--left-pane)) 1fr !important;
-}
-
-/* Status bar should span full width */
-body.outline-hidden #statusbar {
-  grid-column: 1 / -1;
-}
-
-/* Ensure main/viewport-main expands fully */
-body.outline-hidden #main,
-body.outline-hidden #viewport-main {
-  grid-column: 1 / -1 !important;
-  min-width: 0;
-  width: 100% !important;
-  max-width: 100% !important;
-  flex: 1 1 auto;
-}
-
 /* === Mobile view: only show file tree === */
 @media (max-width: 768px) {
   #app {

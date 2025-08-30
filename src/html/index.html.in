@@ -52,8 +52,6 @@
           <span id="editor-wrap" class="codicon codicon-word-wrap" title="Toggle Word Wrap"></span>
           <span id="editor-minimap" class="codicon codicon-map" title="Toggle Minimap"></span>
           <span id="editor-search" class="codicon codicon-search" title="Find in File"></span>
-          <!-- Outline toggle -->
-          <span id="toggle-outline" class="codicon codicon-layout-sidebar-right" title="Hide Outline panel" aria-pressed="true"></span>
         </div>
       </div>
 
