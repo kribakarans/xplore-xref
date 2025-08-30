@@ -9,7 +9,6 @@ import { navigateTo } from "./nav.js";
 import { registerMakefileLanguage } from "./language/makefile.js";
 import { registerVimLanguage } from "./language/vim.js";
 
-
 // --- blink state
 let __blinkDecorations = [];
 
@@ -147,36 +146,47 @@ export function setActiveTab(path, location = null) {
   if (location) setTimeout(() => goToLocation(path, location.line, location.pattern), 0);
 }
 
+/* ---------- ✅ Modified to return a Promise (async load) ---------- */
 export function createMonacoEditor() {
-  require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
-  require(["vs/editor/editor.main"], function () {
+  return new Promise((resolve) => {
+    require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
+    require(["vs/editor/editor.main"], function () {
 
-    // Register Makefile language before creating any models
-    try { registerMakefileLanguage(monaco); console.log("INFO | makefile language wired"); }
-    catch (e) { console.log("ERROR | makefile language registration failed", e); }
+      // Register Makefile language before creating any models
+      try { registerMakefileLanguage(monaco); console.log("INFO | makefile language wired"); }
+      catch (e) { console.log("ERROR | makefile language registration failed", e); }
 
-    try { registerVimLanguage(monaco); console.log("INFO | vim language wired"); }
-    catch (e) { console.log("ERROR | vim language registration failed", e); }
+      try { registerVimLanguage(monaco); console.log("INFO | vim language wired"); }
+      catch (e) { console.log("ERROR | vim language registration failed", e); }
 
-    editor = monaco.editor.create(document.getElementById("editor"), {
-      value: "", language: "plaintext", theme: "vs-dark",
-      automaticLayout: true, readOnly: true, minimap: { enabled: true }, wordWrap: "off"
-    });
+      editor = monaco.editor.create(document.getElementById("editor"), {
+        value: "", language: "plaintext", theme: "vs-dark",
+        automaticLayout: true, readOnly: true, minimap: { enabled: true }, wordWrap: "off"
+      });
 
-    // context key to control menu visibility
-    hasSymbolCtx = editor.createContextKey("xplore.hasSymbol", false);
-    updateSymbolContext();
-
-    addContextMenuActions();
-
-    editor.onDidChangeCursorPosition(() => {
-      updateCursorStatus(editor);
+      // context key to control menu visibility
+      hasSymbolCtx = editor.createContextKey("xplore.hasSymbol", false);
       updateSymbolContext();
-    });
-    editor.onDidLayoutChange(() => updateCursorStatus(editor));
 
-    updateCursorStatus(editor);
-    statusCenter("Editor ready");
+      addContextMenuActions();
+
+      editor.onDidChangeCursorPosition(() => {
+        updateCursorStatus(editor);
+        updateSymbolContext();
+      });
+      editor.onDidLayoutChange(() => updateCursorStatus(editor));
+
+      // 🔗 Permalink button (copies viewport.html?path=…&line=…)
+      wirePermalinkButton();
+
+      // ⌃/⌘+Click → open viewport.html
+      wireCtrlClickDelegates();
+
+      updateCursorStatus(editor);
+      statusCenter("Editor ready");
+
+      resolve(editor);   // ✅ resolved here
+    });
   });
 }
 
@@ -218,7 +228,7 @@ export function getWordUnderCursor() {
   return w ? w.word : null;
 }
 
-/* ---------- Breadcrumbs (leaf is non-clickable now) ---------- */
+/* ---------- Breadcrumbs ---------- */
 function renderBreadcrumbs(path) {
   const el = document.getElementById("breadcrumbs");
   if (!el) return;
@@ -236,12 +246,10 @@ function renderBreadcrumbs(path) {
     crumb.textContent = seg;
 
     if (!isLeaf) {
-      // Parents: expand the folder in the tree
       crumb.addEventListener("click", () => {
         expandFolderPath(accum);
       });
     } else {
-      // Leaf: do nothing (no navigation). Optional: focus editor for convenience.
       crumb.addEventListener("click", () => {
         document.getElementById("editor")?.focus();
       });
@@ -258,7 +266,6 @@ function renderBreadcrumbs(path) {
 }
 
 function expandFolderPath(dirPath) {
-  // Find the li for this directory and expand/show it
   const li = document.querySelector(`#file-tree li.folder[data-path="${CSS.escape(dirPath)}"]`)
            || document.querySelector(`#file-tree li.folder[data-path="./${CSS.escape(dirPath)}"]`);
   if (!li) return;
@@ -273,7 +280,6 @@ function expandFolderPath(dirPath) {
 /* ---------- Context key: show/hide symbol actions ---------- */
 function isValidSymbol(word) {
   if (!word) return false;
-  // C/C++ style identifiers, allow :: namespaces
   return /^(?:[A-Za-z_][A-Za-z0-9_]*)(?:::[A-Za-z_][A-Za-z0-9_]*)*$/.test(word);
 }
 function updateSymbolContext() {
@@ -285,7 +291,6 @@ function updateSymbolContext() {
 
 /* ===== Context menu: cscope-like minimal set ===== */
 export function addContextMenuActions() {
-  // Go to Definition
   editor.addAction({
     id: "ctx-goto-definition",
     label: "Go to Definition",
@@ -296,7 +301,6 @@ export function addContextMenuActions() {
     run: async () => { await gotoDefinitionAtCursor(); }
   });
 
-  // Go to Declaration
   editor.addAction({
     id: "ctx-goto-declaration",
     label: "Go to Declaration",
@@ -306,7 +310,6 @@ export function addContextMenuActions() {
     run: async () => { await gotoDeclarationAtCursor(); }
   });
 
-  // Go to References
   editor.addAction({
     id: "ctx-goto-references",
     label: "Go to References",
@@ -317,7 +320,6 @@ export function addContextMenuActions() {
     run: async () => { await findReferencesInFileAtCursor(); }
   });
 
-  // Find All References
   editor.addAction({
     id: "ctx-find-all-references",
     label: "Find All References",
@@ -328,9 +330,9 @@ export function addContextMenuActions() {
   });
 }
 
-// Definition/Declaration helpers via tags
+// Definition/Declaration helpers
 import { workspaceTags, symbolsByFile } from "./tags.js";
-import { inferTypeFromLine, rankBySourcePref } from "./lang.js";
+import { rankBySourcePref } from "./lang.js";
 
 async function gotoDefinitionAtCursor() {
   const symbol = getWordUnderCursor(); 
@@ -415,4 +417,65 @@ async function gotoDeclarationAtCursor() {
   const best = candidates[0];
   await navigateTo(best.path, best.line || null, best.pattern || null, { record: true });
   statusCenter(`Declaration: ${symbol} → ${best.path}:${best.line || '?'}`);
+}
+
+/* ===================== Added helpers: permalink + Ctrl/Cmd click ===================== */
+function buildViewportUrl(path, line = null) {
+  const u = new URL("viewport.html", location.href);
+  u.searchParams.set("path", path);
+  if (line && Number(line) > 0) u.searchParams.set("line", String(Number(line)));
+  return u.toString();
+}
+
+function wirePermalinkButton() {
+  const btn = document.getElementById("editor-permalink");
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    if (!activePath) return;
+    const pos = editor?.getPosition?.();
+    const line = pos?.lineNumber || null;
+    const url = buildViewportUrl(activePath, line);
+    (navigator.clipboard?.writeText(url) || Promise.reject())
+      .then(() => toast("Permalink copied"))
+      .catch(() => toast("Permalink: " + url));
+  });
+}
+
+function openInViewport(path, line = null) {
+  const href = buildViewportUrl(path, line);
+  window.open(href, "_blank", "noopener");
+}
+
+function wireCtrlClickDelegates() {
+  const tree = document.getElementById("file-tree");
+  if (tree) {
+    tree.addEventListener("click", (e) => {
+      const li = e.target.closest("li[data-path]");
+      if (!li) return;
+      const ctrl = e.ctrlKey || e.metaKey;
+      if (!ctrl) return;
+      const path = li.getAttribute("data-path");
+      e.preventDefault(); e.stopPropagation();
+      openInViewport(path);
+    }, true);
+  }
+
+  const hook = (id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("click", (e) => {
+      const li = e.target.closest("li[data-path]");
+      if (!li) return;
+      const ctrl = e.ctrlKey || e.metaKey;
+      if (!ctrl) return;
+      const path = li.getAttribute("data-path");
+      const lineAttr = li.getAttribute("data-line");
+      const line = lineAttr ? Number(lineAttr) : null;
+      e.preventDefault(); e.stopPropagation();
+      openInViewport(path, line);
+    }, true);
+  };
+  hook("symbol-results");
+  hook("refs-results");
+  hook("grep-results");
 }

@@ -1,4 +1,6 @@
 *.swp
 *.*~
-data/
+data
 index.html
+viewport.html
+__xplore

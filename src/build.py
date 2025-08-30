@@ -238,6 +238,27 @@ def build_xref(root: str = ROOT_DIR, outfile: str = TAGS_FILE) -> bool:
         log(f"Unexpected error while running ctags: {e}", "ERROR")
         return False
 
+def create_viewport_link():
+    """Ensure viewport.html at project root points to __xplore/viewport.html"""
+    target = os.path.join(HTML_DIR, "viewport.html")
+    link = "viewport.html"
+
+    try:
+        # Remove stale file/link if exists
+        if os.path.lexists(link):  # handles both symlink and file
+            os.remove(link)
+
+        os.symlink(target, link)
+        log(f"Created symlink: {link} -> {target}")
+    except (OSError, NotImplementedError) as e:
+        # Fallback: copy instead of symlink
+        try:
+            shutil.copy2(target, link)
+            log(f"Copied viewport.html to root (symlink unavailable: {e})", "WARN")
+        except Exception as e2:
+            log(f"Failed to place viewport.html at root: {e2}", "ERROR")
+
+
 def main():
     # Parse command line arguments
     app_name = "Xplore"  # default value
@@ -268,6 +289,9 @@ def main():
 
     # Render HTML template
     render_template(app_name, repo_url)
+
+    # Ensure viewport.html link is created
+    create_viewport_link()
 
 if __name__ == "__main__":
     main()

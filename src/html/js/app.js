@@ -1,5 +1,5 @@
 // app-boot.js — entrypoint
-import { createMonacoEditor, getEditor, setFullTree } from "./editor.js";
+import { createMonacoEditor, getEditor, setFullTree, getActiveTab } from "./editor.js";
 import { renderTree, searchTree } from "./tree.js";
 import { loadFullTree } from "./fs.js";
 import { loadWorkspaceTags } from "./tags.js";
@@ -99,6 +99,28 @@ window.addEventListener("load", async () => {
       toast(`Preview ${on ? "ON" : "OFF"}`);
     });
   }
+
+  // Save button (download current tab content)
+  function saveActiveTab() {
+    const tab = getActiveTab();
+    if (!tab) { toast("Nothing to save"); return; }
+    const blob = new Blob([tab.content ?? ""], { type: "text/plain;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = tab.name || "download.txt";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 0);
+    a.remove();
+    toast(`Saved ${tab.name}`);
+  }
+  document.getElementById("editor-save")?.addEventListener("click", saveActiveTab);
+  window.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+      e.preventDefault();
+      saveActiveTab();
+    }
+  });
 
   // Symbols: keep only File Symbols (Workspace handled via modal toggle)
   document.getElementById("file-symbols")?.addEventListener("click", () => {

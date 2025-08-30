@@ -1,44 +1,125 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>{{ PAGE_TITLE }}</title>
+  <title>Xplore Viewport</title>
   <link rel="icon" href="__xplore/favicon.ico" type="image/png">
 
-  <!-- Aggregated stylesheet -->
+  <!-- Styles -->
   <link rel="stylesheet" href="__xplore/styles.css" />
 
   <!-- Codicons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@vscode/codicons/dist/codicon.css">
 
-  <!-- Monaco loader -->
+  <!-- Monaco -->
   <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.min.js"></script>
 
-  <!-- Markdown preview (with highlight.js) -->
+  <!-- Markdown/Highlight -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/github-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/12.3.2/markdown-it.min.js"></script>
+
+  <!-- ✅ Viewport-only layout overrides -->
+  <style>
+    #app {
+      display: grid;
+      grid-template-columns: 1fr var(--gutter-hit, 8px) var(--right-pane, 300px);
+      grid-template-rows: 1fr auto; /* main + statusbar */
+      height: 100vh;
+      margin: 0;
+    }
+
+    #viewport-main {
+      grid-column: 1;
+      grid-row: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    #viewport-main #content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    #viewport-main #editor,
+    #viewport-main #preview {
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* Right gutter (resizable) */
+    .gutter-right {
+      grid-column: 2;
+      grid-row: 1;
+      cursor: col-resize;
+      background: transparent;
+      z-index: 10;
+    }
+
+    .gutter-right.is-dragging {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    #right {
+      grid-column: 3;
+      grid-row: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: var(--min-right, 200px);
+      max-width: var(--max-right, 600px);
+      border-left: 1px solid #333;
+    }
+
+    #statusbar {
+      grid-column: 1 / span 3;
+      grid-row: 2;
+    }
+
+    /* ✅ Mobile view: stack outline below editor */
+    @media (max-width: 768px) {
+      #app {
+        grid-template-columns: 1fr;       /* single column */
+        grid-template-rows: 1fr auto auto; /* editor | outline | statusbar */
+      }
+
+      #viewport-main {
+        grid-column: 1;
+        grid-row: 1;
+      }
+
+      .gutter-right {
+        display: none; /* hide gutter on mobile */
+      }
+
+      #right {
+        grid-column: 1;
+        grid-row: 2;    /* move outline below editor */
+        max-width: 100%;
+        min-width: 100%;
+        border-left: none;
+        border-top: 1px solid #333;
+      }
+
+      #statusbar {
+        grid-column: 1;
+        grid-row: 3;
+      }
+    }
+  </style>
 </head>
 
 <body class="vscode-theme-dark">
-  <!-- GRID SHELL: left | main | right ; statusbar spans -->
-  <div id="app" role="application" aria-label="Editor Shell">
-    <!-- Left panel (Explorer) -->
-    <div id="sidebar" aria-label="Sidebar Left">
-      <div id="sidebar-header">
-        <h3 onclick="window.open('{{ REPO_URL }}', '_blank')" class="{{ 'clickable' if REPO_URL != '#' else '' }}">
-          {{ APP_NAME }}
-        </h3>
-        <span id="search-toggle" class="codicon codicon-search" title="Toggle file search"></span>
-      </div>
-      <input type="text" id="file-search" placeholder="Search files..." style="display:none;" />
-      <ul id="file-tree" class="tree" role="tree" aria-label="File explorer"></ul>
-    </div>
+  <div id="app" role="application" aria-label="Viewport Shell">
 
-    <!-- Main area (Editor + Preview only) -->
-    <div id="main" aria-label="Editor">
+    <!-- ✅ Editor/Preview area -->
+    <div id="viewport-main" aria-label="Editor">
+
+      <!-- Toolbar -->
       <div id="editor-toolbar">
         <div id="tabs"></div>
         <div id="editor-tools">
@@ -46,32 +127,32 @@
           <span id="nav-forward" class="codicon codicon-arrow-right" title="Navigate Forward (Alt+→)"></span>
           <span id="editor-preview" class="codicon codicon-eye" title="Toggle Preview (MD/HTML)"></span>
           <span id="editor-save" class="codicon codicon-save" title="Save file"></span>
-          <span id="editor-permalink" class="codicon codicon-link" title="Copy permalink to this file/line"></span>
+          <span id="editor-permalink" class="codicon codicon-link" title="Copy permalink"></span>
           <span id="file-symbols" class="codicon codicon-list-selection" title="File Symbols (Ctrl+Shift+O)"></span>
-          <span id="workspace-grep" class="codicon codicon-search-sparkle" title="Grep in Workspace (Ctrl+Shift+F)"></span>
           <span id="editor-wrap" class="codicon codicon-word-wrap" title="Toggle Word Wrap"></span>
           <span id="editor-minimap" class="codicon codicon-map" title="Toggle Minimap"></span>
           <span id="editor-search" class="codicon codicon-search" title="Find in File"></span>
-          <!-- Outline toggle -->
-          <span id="toggle-outline" class="codicon codicon-layout-sidebar-right" title="Hide Outline panel" aria-pressed="true"></span>
+          <span id="toggle-outline" class="codicon codicon-layout-sidebar-right" title="Hide Outline panel"></span>
         </div>
       </div>
 
       <!-- Breadcrumbs -->
       <div id="breadcrumbs" aria-label="Breadcrumbs"></div>
 
-      <!-- Editor/Preview content -->
+      <!-- Editor/Preview -->
       <div id="content">
         <div id="editor"></div>
         <div id="preview">
           <iframe id="preview-frame"
-                  sandbox="allow-same-origin allow-scripts allow-forms allow-popups">
-          </iframe>
+                  sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
         </div>
       </div>
     </div>
 
-    <!-- Right panel (Outline only) -->
+    <!-- ✅ Right gutter (resizable) -->
+    <div class="gutter-right" role="separator" aria-orientation="vertical" tabindex="0"></div>
+
+    <!-- ✅ Right outline panel -->
     <div id="right" aria-label="Sidebar Right">
       <aside id="outline">
         <div id="outline-header">
@@ -82,22 +163,15 @@
       </aside>
     </div>
 
-    <!-- Status bar (spans all columns) -->
+    <!-- ✅ Status bar -->
     <div id="statusbar" role="status" aria-live="polite">
       <div id="status-left"><span class="codicon codicon-file"></span> —</div>
       <div id="status-center">Ready.</div>
       <div id="status-right">Ln 1, Col 1 • WRAP: OFF • MINIMAP: ON</div>
     </div>
-
-    <!-- Invisible gutters (desktop) -->
-    <div class="gutter gutter-left" role="separator" aria-orientation="vertical"
-         aria-label="Resize left panel" tabindex="0" title="Drag to resize • Double-click to reset"></div>
-    <div class="gutter gutter-right" role="separator" aria-orientation="vertical"
-         aria-label="Resize right panel" tabindex="0" title="Drag to resize • Double-click to reset"></div>
   </div>
 
-  <!-- Modals (kept at end so DOM is ready when JS registers) -->
-  <!-- Symbol Modal -->
+  <!-- Modals -->
   <div id="symbol-modal" class="modal" aria-hidden="true">
     <div class="modal-card">
       <div class="modal-tabs">
@@ -105,44 +179,20 @@
         <button data-tab="file">File</button>
         <button id="symbol-close" class="modal-close" title="Close">×</button>
       </div>
-
-      <!-- Progress bar -->
       <div class="modal-progress" id="symbol-progress"><div class="bar"></div></div>
-
       <input type="text" id="symbol-query" placeholder="Search symbols…">
       <ul id="symbol-results"></ul>
     </div>
   </div>
 
-  <!-- References Modal -->
   <div id="refs-modal" class="modal" aria-hidden="true">
     <div class="modal-card">
       <div class="modal-header">
         <span id="refs-title">References</span>
         <button id="refs-close" class="modal-close" title="Close">×</button>
       </div>
-
-      <!-- Progress bar -->
       <div class="modal-progress" id="refs-progress"><div class="bar"></div></div>
-
       <ul id="refs-results"></ul>
-    </div>
-  </div>
-
-  <!-- Grep Modal -->
-  <div id="grep-modal" class="modal" aria-hidden="true">
-    <div class="modal-card">
-      <div class="modal-header">
-        <span id="grep-title">Grep in Workspace</span>
-        <button id="grep-close" class="modal-close" title="Close">×</button>
-      </div>
-
-      <input type="text" id="grep-query" placeholder="Enter search string…">
-
-      <!-- Progress bar -->
-      <div class="modal-progress" id="grep-progress"><div class="bar"></div></div>
-
-      <ul id="grep-results"></ul>
     </div>
   </div>
 
@@ -150,6 +200,6 @@
 
   <!-- Scripts -->
   <script type="module" src="__xplore/js/ui-layout.js"></script>
-  <script type="module" src="__xplore/js/app.js"></script>
+  <script type="module" src="__xplore/js/viewport.js"></script>
 </body>
 </html>

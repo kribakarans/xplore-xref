@@ -1,0 +1,54 @@
+/* viewport.css — lightweight imports + viewport overrides */
+
+/* === Base imports for viewport === */
+@import url("./00-base.css");
+@import url("./10-layout.css");
+@import url("./30-tabs.css");
+@import url("./40-toolbar.css");
+@import url("./50-preview.css");
+@import url("./60-outline.css");
+@import url("./70-statusbar.css");
+@import url("./80-modal.css");
+@import url("./90-toast.css");
+@import url("./95-scrollbars.css");
+
+/* === Viewport-only overrides === */
+
+/* Layout: editor left (expands), outline right (fixed width) */
+#app {
+  display: grid;
+  grid-template-columns: 1fr auto; /* editor/preview + outline */
+  height: 100%;
+}
+
+#main {
+  width: 100% !important;
+  margin: 0;
+}
+
+#content,
+#editor {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100% !important;   /* editor stretches full width */
+}
+
+/* Outline fixed width */
+#right {
+  width: 280px;
+  min-width: 240px;
+  max-width: 400px;
+}
+
+/* ✅ Force Monaco content to top-left */
+.monaco-editor,
+.monaco-editor .overflow-guard {
+  display: block !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+
+.monaco-editor .view-lines {
+  margin-left: 0 !important;
+}

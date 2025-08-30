@@ -57,25 +57,33 @@ function positionGutters() {
   const grid    = document.getElementById("app");
   const leftEl  = document.getElementById("sidebar");
   const rightEl = document.getElementById("right");
-  const mainEl  = document.getElementById("main");
+
+  // ✅ support both mainview and viewport
+  const mainEl  = document.getElementById("main") || document.getElementById("viewport-main");
+
   const gLeft   = document.querySelector(".gutter-left");
   const gRight  = document.querySelector(".gutter-right");
-  if (!grid || !leftEl || !mainEl || !gLeft) return;
+  if (!grid || !mainEl || !gLeft) return;
 
   const gridRect = grid.getBoundingClientRect();
-  const leftRect = leftEl.getBoundingClientRect();
   const mainRect = mainEl.getBoundingClientRect();
   const hit      = pxToNum(readVar("--gutter-hit")) || 8;
 
-  // vertical coverage = #main height; start at #main top
+  // vertical coverage = main area height; start at main top
   const top = mainRect.top - gridRect.top;
   const height = mainRect.height;
 
   gLeft.style.top = `${top}px`;
   gLeft.style.height = `${height}px`;
 
-  const leftSeamX = leftRect.right - gridRect.left;
-  gLeft.style.left = `calc(${leftSeamX}px - ${hit/2}px)`;
+  if (leftEl) {
+    const leftRect = leftEl.getBoundingClientRect();
+    const leftSeamX = leftRect.right - gridRect.left;
+    gLeft.style.left = `calc(${leftSeamX}px - ${hit/2}px)`;
+  } else {
+    // No left sidebar in viewport → hide left gutter
+    gLeft.style.display = "none";
+  }
 
   if (gRight) {
     // Hide right gutter if outline hidden
