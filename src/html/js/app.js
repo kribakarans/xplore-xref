@@ -15,20 +15,25 @@ function isMobileView() {
   return window.innerWidth <= 768;
 }
 
-// Find README-like file
+// Find README-like files in the root of the workspace
 function findReadme(tree) {
-  const readmeNames = ["README.md", "INDEX.md"];
-  function search(nodes) {
-    for (const node of nodes) {
-      if (node.type === "file" && readmeNames.includes(node.name)) return node;
-      if (node.children) {
-        const found = search(node.children);
-        if (found) return found;
-      }
+  const readmeNames = [
+    "README.md", "INDEX.md",
+    "README.txt", "INDEX.txt",
+    "README", "INDEX",
+    "readme.md", "index.md",
+    "readme.txt", "index.txt",
+    "readme", "index"
+  ];
+
+  // Only check files in the root of the workspace (no recursion)
+  for (const node of tree) {
+    if (node.type === "file" && readmeNames.includes(node.name)) {
+      return node;  // return the first root README/INDEX found
     }
-    return null;
   }
-  return search(tree);
+
+  return null;  // no root readme/index found
 }
 
 // Only initialize Monaco on non-mobile

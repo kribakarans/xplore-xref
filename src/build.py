@@ -24,7 +24,7 @@ EXCLUDED_FILE_PATTERNS = (
     ".pyc", ".pyo", ".pyd", ".class", ".jar", ".war"
 )
 EXCLUDED_FILE_NAMES = {".DS_Store", "desktop.ini"}
-EXCLUDED_DIRS = {".git", "node_modules", "__pycache__", ".idea", ".vscode", "venv"}
+EXCLUDED_DIRS = {".git", ".github", "__ktags", "__html", "node_modules", "__pycache__", ".idea", ".vscode", "venv"}
 
 def log(msg, level="INFO"):
     """Improved logging with timestamp"""
