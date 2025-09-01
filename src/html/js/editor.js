@@ -159,16 +159,10 @@ export function createMonacoEditor() {
         theme: "vs-dark",
         automaticLayout: true,
         readOnly: true,
-        minimap: { enabled: true },
-        wordWrap: "off"
+        wordWrap: "on",
+        domReadOnly: true,
+        minimap: { enabled: false }
       };
-
-      if (isMobile()) {
-        opts.domReadOnly = true;       // prevent mobile keyboard
-        opts.minimap.enabled = false;  // no minimap on mobile
-        opts.wordWrap = "on";          // wrap lines on mobile
-        console.log("INFO | Mobile editor: domReadOnly, wrap=on, minimap off");
-      }
 
       editor = monaco.editor.create(document.getElementById("editor"), opts);
 
